@@ -1,24 +1,22 @@
-import React from "react"; 
-import styled from "styled-components";
-import { keyframes } from "styled-components";
+import React, { useState } from "react"; 
+import styled, { keyframes } from "styled-components";
 import GlobeTube from "../img/logo.png";
-import HomeIcon from "@mui/icons-material/Home";
-import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
-import SubscriptionsOutlinedIcon from "@mui/icons-material/SubscriptionsOutlined";
-import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
-import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
-import LibraryMusicOutlinedIcon from "@mui/icons-material/LibraryMusicOutlined";
-import SportsEsportsOutlinedIcon from "@mui/icons-material/SportsEsportsOutlined";
-import SportsBasketballOutlinedIcon from "@mui/icons-material/SportsBasketballOutlined";
-import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
+import SubscriptionsRoundedIcon from "@mui/icons-material/SubscriptionsRounded";
+import VideoLibraryRoundedIcon from "@mui/icons-material/VideoLibraryRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import MusicNoteRoundedIcon from "@mui/icons-material/MusicNoteRounded";
+import SportsEsportsRoundedIcon from "@mui/icons-material/SportsEsportsRounded";
+import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
+import TheatersRoundedIcon from "@mui/icons-material/TheatersRounded";
+import FeedRoundedIcon from "@mui/icons-material/FeedRounded";
+import StreamRoundedIcon from "@mui/icons-material/StreamRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import OutlinedFlagRoundedIcon from "@mui/icons-material/OutlinedFlagRounded";
+import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Link } from "react-router-dom";
-
 
 // Thème violet
 const theme = {
@@ -31,22 +29,7 @@ const theme = {
   gradient: "linear-gradient(135deg, #8A2BE2, #4B0082)",
 };
 
-const Container = styled.div`
-  flex: 1;
-  background-color: #f1f1f1;
-  height: 100%;
-  color: #333;
-  font-size: 20px;
-  position: sticky;
-  top: 0;
-  padding: 10px
-  margin: 25px
-`;
-
-const Wrapper = styled.div`
-  padding: 18px 26px;
-`;
-
+// Animations
 const float = keyframes`
   0% {
     transform: translateY(0px);
@@ -59,18 +42,89 @@ const float = keyframes`
   }
 `;
 
+const pulse = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(138, 43, 226, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0);
+  }
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const glowEffect = keyframes`
+  0% {
+    text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(138, 43, 226, 0.8), 0 0 20px rgba(147, 112, 219, 0.5);
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+  }
+`;
+
+const Container = styled.div`
+  flex: 1;
+  background: linear-gradient(to bottom, #f8f4ff, #f1f1f1);
+  height: 100%;
+  color: ${theme.textColor};
+  font-size: 16px;
+  position: sticky;
+  top: 0;
+  padding: 10px;
+  border-right: 1px solid rgba(138, 43, 226, 0.2);
+  box-shadow: 5px 0 15px rgba(138, 43, 226, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 5px 0 20px rgba(138, 43, 226, 0.2);
+  }
+`;
+
+const Wrapper = styled.div`
+  padding: 18px 26px;
+  animation: ${fadeIn} 0.8s ease-out;
+`;
+
 const Logo = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
   font-weight: bold;
   margin-top: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   animation: ${float} 3s ease-in-out infinite;
+  color: ${theme.primaryColor};
+  font-size: 24px;
+  letter-spacing: 0.5px;
+  
+  &:hover {
+    animation: ${glowEffect} 1.5s infinite;
+  }
 `;
 
 const Img = styled.img`
-  height: 25px;
+  height: 30px;
+  filter: drop-shadow(0 0 5px rgba(138, 43, 226, 0.5));
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: rotate(15deg);
+  }
 `;
 
 const Item = styled.div`
@@ -78,26 +132,79 @@ const Item = styled.div`
   align-items: center;
   gap: 20px;
   cursor: pointer;
-  padding: 7.5px 0px;
-
+  padding: 10px 15px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+  position: relative;
+  overflow: hidden;
+  
+  svg {
+    color: ${theme.secondaryColor};
+    transition: all 0.3s ease;
+    font-size: 22px;
+  }
+  
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background: ${theme.gradient};
+    transition: width 0.3s ease;
+  }
+  
   &:hover {
-    background-color: #ccc;  /* Couleur de survol */
+    background-color: rgba(138, 43, 226, 0.08);
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(138, 43, 226, 0.15);
+    
+    svg {
+      color: ${theme.primaryColor};
+      transform: scale(1.2);
+    }
+    
+    &:before {
+      width: 100%;
+    }
+  }
+  
+  &.active {
+    background-color: rgba(138, 43, 226, 0.15);
+    font-weight: bold;
+    
+    svg {
+      color: ${theme.primaryColor};
+    }
   }
 `;
 
 const Hr = styled.hr`
-  margin: 15px 0px;
-  border: 0.5px solid #ccc;
-  border-color: rgba(138, 43, 226, 0.6);
+  margin: 20px 0px;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    rgba(138, 43, 226, 0), 
+    rgba(138, 43, 226, 0.6), 
+    rgba(138, 43, 226, 0));
 `;
 
-
-const Login = styled.div``;
+const Login = styled.div`
+  color: ${theme.textColor};
+  font-size: 14px;
+  line-height: 1.4;
+  background-color: rgba(138, 43, 226, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 10px rgba(138, 43, 226, 0.1);
+  animation: ${fadeIn} 1s ease-out;
+`;
 
 const Button = styled.button`
-  padding: 8px 20px;
-  border: none;
-  color: ${theme.primaryColor};
+  padding: 10px 22px;
+  background: ${props => props.transparent ? "transparent" : theme.gradient};
   border: ${props => props.transparent ? `2px solid ${theme.primaryColor}` : "none"};
   color: ${props => props.transparent ? theme.primaryColor : "white"};
   border-radius: 25px;
@@ -105,22 +212,28 @@ const Button = styled.button`
   font-size: 14px;
   cursor: pointer;
   display: flex;
-  margin-top: 10px;
+  margin-top: 15px;
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  animation: ${pulse} 2s infinite;
   box-shadow: ${props => props.transparent ? 
     `0 3px 10px rgba(138, 43, 226, 0.1)` : 
     `0 5px 15px rgba(138, 43, 226, 0.3)`};
   
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: ${props => props.transparent ? 
-      `0 5px 15px rgba(138, 43, 226, 0.2)` : 
-      `0 8px 20px rgba(138, 43, 226, 0.4)`};
+      `0 8px 20px rgba(138, 43, 226, 0.2)` : 
+      `0 10px 25px rgba(138, 43, 226, 0.4)`};
     background: ${props => props.transparent ? 
       `${theme.primaryColor}15` : 
-      `linear-gradient(135deg, ${theme.primaryColor}, ${theme.darkColor})`};
+      `linear-gradient(135deg, ${theme.accentColor}, ${theme.darkColor})`};
+    letter-spacing: 0.5px;
+  }
+  
+  &:active {
+    transform: translateY(1px);
   }
   
   svg {
@@ -129,13 +242,37 @@ const Button = styled.button`
 `;
 
 const Title = styled.h2`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #aaaaaa;  /* Couleur des titres */
-  margin-bottom: 20px;
+  color: ${theme.secondaryColor};
+  margin-bottom: 15px;
+  position: relative;
+  padding-bottom: 5px;
+  display: inline-block;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: ${theme.gradient};
+    border-radius: 2px;
+  }
+`;
+
+const CategorySection = styled.div`
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
 const Menu = () => {
+  const [activeItem, setActiveItem] = useState("Home");
+  
+  const handleItemClick = (itemName) => {
+    setActiveItem(itemName);
+  };
+  
   return (
     <Container>
       <Wrapper>
@@ -145,77 +282,139 @@ const Menu = () => {
             GlobeTube
           </Logo>
         </Link>
-        <Item>
-          <HomeIcon />
-          Home
-        </Item>
-        <Item>
-          <ExploreOutlinedIcon />
-          Explore
-        </Item>
-        <Item>
-          <SubscriptionsOutlinedIcon />
-          Subscriptions
-        </Item>
+        
+        <CategorySection>
+          <Item 
+            className={activeItem === "Home" ? "active" : ""} 
+            onClick={() => handleItemClick("Home")}
+          >
+            <HomeRoundedIcon />
+            Home
+          </Item>
+          <Link to="trends" style={{textDecoration:"none", color:"inherit"}}>
+            <Item 
+            className={activeItem === "Explore" ? "active" : ""} 
+            onClick={() => handleItemClick("Explore")}>
+            <ExploreRoundedIcon />
+            Explore
+            </Item>
+          </Link>
+          
+          <Link to="subscriptions" style={{textDecoration:"none", color:"inherit"}}>
+            <Item 
+            className={activeItem === "Subscriptions" ? "active" : ""} 
+            onClick={() => handleItemClick("Subscriptions")}>
+            <SubscriptionsRoundedIcon />
+            Subscriptions
+          </Item>
+          </Link>
+
+        </CategorySection>
+        
         <Hr />
-        <Item>
-          <VideoLibraryOutlinedIcon />
-          Library
-        </Item>
-        <Item>
-          <HistoryOutlinedIcon />
-          History
-        </Item>
+        
+        <CategorySection>
+          <Item 
+            className={activeItem === "Library" ? "active" : ""} 
+            onClick={() => handleItemClick("Library")}
+          >
+            <VideoLibraryRoundedIcon />
+            Library
+          </Item>
+          <Item 
+            className={activeItem === "History" ? "active" : ""} 
+            onClick={() => handleItemClick("History")}
+          >
+            <HistoryRoundedIcon />
+            History
+          </Item>
+        </CategorySection>
+        
         <Hr />
+        
         <Login>
           Sign in to like videos, comment, and subscribe.
           <Link to="signin" style={{textDecoration:"none"}}>
             <Button>
-              <AccountCircleOutlinedIcon />
+              <PersonRoundedIcon />
               SIGN IN
             </Button>
           </Link>
         </Login>
+        
         <Hr />
-        <Title>BEST OF GlobeTube</Title>
-        <Item>
-          <LibraryMusicOutlinedIcon />
-          Music
-        </Item>
-        <Item>
-          <SportsBasketballOutlinedIcon />
-          Sports
-        </Item>
-        <Item>
-          <SportsEsportsOutlinedIcon />
-          Gaming
-        </Item>
-        <Item>
-          <MovieOutlinedIcon />
-          Movies
-        </Item>
-        <Item>
-          <ArticleOutlinedIcon />
-          News
-        </Item>
-        <Item>
-          <LiveTvOutlinedIcon />
-          Live
-        </Item>
+        
+        <Title>Tendances</Title>
+        <CategorySection>
+          <Item 
+            className={activeItem === "Music" ? "active" : ""} 
+            onClick={() => handleItemClick("Music")}
+          >
+            <MusicNoteRoundedIcon />
+            Music
+          </Item>
+          <Item 
+            className={activeItem === "Sports" ? "active" : ""} 
+            onClick={() => handleItemClick("Sports")}
+          >
+            <SportsSoccerRoundedIcon />
+            Sports
+          </Item>
+          <Item 
+            className={activeItem === "Gaming" ? "active" : ""} 
+            onClick={() => handleItemClick("Gaming")}
+          >
+            <SportsEsportsRoundedIcon />
+            Gaming
+          </Item>
+          <Item 
+            className={activeItem === "Movies" ? "active" : ""} 
+            onClick={() => handleItemClick("Movies")}
+          >
+            <TheatersRoundedIcon />
+            Movies
+          </Item>
+          <Item 
+            className={activeItem === "News" ? "active" : ""} 
+            onClick={() => handleItemClick("News")}
+          >
+            <FeedRoundedIcon />
+            News
+          </Item>
+          <Item 
+            className={activeItem === "Live" ? "active" : ""} 
+            onClick={() => handleItemClick("Live")}
+          >
+            <StreamRoundedIcon />
+            Live
+          </Item>
+        </CategorySection>
+        
         <Hr />
-        <Item>
-          <SettingsOutlinedIcon />
-          Settings
-        </Item>
-        <Item>
-          <FlagOutlinedIcon />
-          Report
-        </Item>
-        <Item>
-          <HelpOutlineOutlinedIcon />
-          Help
-        </Item>
-
+        
+        <CategorySection>
+          <Item 
+            className={activeItem === "Settings" ? "active" : ""} 
+            onClick={() => handleItemClick("Settings")}
+          >
+            <SettingsRoundedIcon />
+            Settings
+          </Item>
+          <Item 
+            className={activeItem === "Report" ? "active" : ""} 
+            onClick={() => handleItemClick("Report")}
+          >
+            <OutlinedFlagRoundedIcon />
+            Report
+          </Item>
+          <Item 
+            className={activeItem === "Help" ? "active" : ""} 
+            onClick={() => handleItemClick("Help")}
+          >
+            <HelpRoundedIcon />
+            Help
+          </Item>
+        </CategorySection>
       </Wrapper>
     </Container>
   );

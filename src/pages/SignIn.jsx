@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import GlobeTube from "../img/logo.png";
+import axios from "axios";
 
 // Thème violet dominant
 const theme = {
@@ -68,7 +69,6 @@ const Wrapper = styled.div`
   &:before {
     content: "";
     position: absolute;
-    top: 0;
     left: 0;
     width: 100%;
     height: 20px;
@@ -290,7 +290,7 @@ const SignIn = () => {
   const [activeTab, setActiveTab] = useState("signin");
   const [focusedInput, setFocusedInput] = useState(null);
   const [inputs, setInputs] = useState({
-    username: "",
+    name: "",
     email: "",
     password: ""
   });
@@ -302,6 +302,15 @@ const SignIn = () => {
     });
   };
 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try{
+      const res = await axios.post("/auth/login", inputs);
+      console.log(res.data);
+    }catch(err){
+      console.log(err);
+    }
+  }
   return (
     <Container>
       <Wrapper>
@@ -327,8 +336,8 @@ const SignIn = () => {
         
         {activeTab === "signin" ? (
           <FormContainer>
-            <Title>Bienvenue</Title>
-            <SubTitle>Connectez-vous pour continuer</SubTitle>
+            <Title>Welcome</Title>
+            <SubTitle>Log in to continue</SubTitle>
             
             <InputGroup>
               <InputLabel 
@@ -368,27 +377,27 @@ const SignIn = () => {
               />
             </InputGroup>
             
-            <Button>Se connecter</Button>
+            <Button onClick={handleLogin}>Sign In</Button>
           </FormContainer>
         ) : (
           <FormContainer>
-            <Title>Créer un compte</Title>
-            <SubTitle>Rejoignez la communauté LamaTube</SubTitle>
+            <Title>Create an account</Title>
+            <SubTitle>Join the Globe Tube community</SubTitle>
             
             <InputGroup>
               <InputLabel 
-                focused={focusedInput === "username"} 
-                hasValue={inputs.username !== ""}
+                focused={focusedInput === "name"} 
+                hasValue={inputs.name !== ""}
               >
                 User name
               </InputLabel>
               <Input 
-                name="username"
-                value={inputs.username}
+                name="name"
+                value={inputs.name}
                 onChange={handleInputChange}
-                onFocus={() => setFocusedInput("username")}
+                onFocus={() => setFocusedInput("name")}
                 onBlur={() => setFocusedInput(null)}
-                focused={focusedInput === "username"}
+                focused={focusedInput === "name"}
                 placeholder="User name"
               />
             </InputGroup>
