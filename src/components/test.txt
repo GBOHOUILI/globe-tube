@@ -1,0 +1,24 @@
+        <ButtonsContainer>
+          <IconButton>
+            <VideoCallOutlinedIcon />
+          </IconButton>
+          
+          <NotificationBadge>
+            <IconButton>
+              <NotificationsNoneOutlinedIcon />
+            </IconButton>
+          </NotificationBadge>
+          <Avatar/>
+
+
+                  </ButtonsContainer>
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAu3Vd5EZ0xmthmHcGEsyLEzbSChguky-w",
+    authDomain:"video-7801c.firebaseapp.com",
+    projectId:"video-7801c",
+    storageBucket: "video-7801c.appspot.com",
+    messagingSenderId: "130073115219",
+    appId: "1:130073115219:web:365035e1474abbe7fba4a6"
+};

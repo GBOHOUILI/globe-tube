@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ThumbDownOffAltOutlinedIcon from "@mui/icons-material/ThumbDownOffAltOutlined";
@@ -7,6 +7,9 @@ import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import Comments from "../components/Comments";
 import Card from "../components/Card";
 import GlobeTube from "../img/logo.png";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 //import Video1 from "../vidéos/Video1.mp4"
 
 // Thème violet
@@ -261,12 +264,32 @@ const RecommendationTitle = styled.h3`
 
 const Video = () => {
   useEffect(() => {
-    // Force re-rendering to trigger animations if needed
     const timer = setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
+  const path = useLocation().pathname.split("/")[2]
+
+  const [video, setVideo] = useState({})
+  const [channel, setChannel] = useState({})
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const videoRes = await axios.get{`/videos/find/${path}`}
+  //       const channelRes = await axios.get{`/users/find/${videoRes.userId}`}
+
+  //     }catch(err){
+
+  //     }
+  //   }
+  // })
+
 
   return (
     <Container>

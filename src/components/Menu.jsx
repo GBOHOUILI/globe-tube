@@ -17,6 +17,7 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import OutlinedFlagRoundedIcon from "@mui/icons-material/OutlinedFlagRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 // Thème violet
 const theme = {
@@ -272,7 +273,7 @@ const Menu = () => {
   const handleItemClick = (itemName) => {
     setActiveItem(itemName);
   };
-  
+  const { currentUser } = useSelector((state) => state.user)
   return (
     <Container>
       <Wrapper>
@@ -284,13 +285,15 @@ const Menu = () => {
         </Link>
         
         <CategorySection>
-          <Item 
-            className={activeItem === "Home" ? "active" : ""} 
-            onClick={() => handleItemClick("Home")}
-          >
-            <HomeRoundedIcon />
-            Home
-          </Item>
+          <Link to="/" style={{textDecoration:"none", color:"inherit"}}>
+            <Item 
+              className={activeItem === "Home" ? "active" : ""} 
+              onClick={() => handleItemClick("Home")}>
+              <HomeRoundedIcon />
+              Home
+            </Item>
+          </Link>
+
           <Link to="trends" style={{textDecoration:"none", color:"inherit"}}>
             <Item 
             className={activeItem === "Explore" ? "active" : ""} 
@@ -332,6 +335,8 @@ const Menu = () => {
         
         <Hr />
         
+    {!currentUser && 
+      <>
         <Login>
           Sign in to like videos, comment, and subscribe.
           <Link to="signin" style={{textDecoration:"none"}}>
@@ -343,7 +348,8 @@ const Menu = () => {
         </Login>
         
         <Hr />
-        
+      </>        
+    }
         <Title>Tendances</Title>
         <CategorySection>
           <Item 

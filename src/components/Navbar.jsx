@@ -5,6 +5,8 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import VideoCallOutlinedIcon from "@mui/icons-material/VideoCallOutlined";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+// import { Avatar } from "@mui/material";
 
 // Thème violet
 const theme = {
@@ -217,11 +219,26 @@ const Button = styled.button`
     font-size: 18px;
   }
 `;
+const User = styled.div`
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      color: ${({ theme }) => theme.textColor}
+`
 
+const Avatar = styled.img`
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #999;
+
+`
 const Navbar = () => {
   const [focused, setFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const { currentUser } = useSelector(state => state.user)
+  
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -230,7 +247,6 @@ const Navbar = () => {
         setScrolled(false);
       }
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -246,7 +262,7 @@ const Navbar = () => {
         
         <Search focused={focused}>
           <Input 
-            placeholder="Rechercher" 
+            placeholder="Search" 
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
           />
@@ -254,24 +270,31 @@ const Navbar = () => {
             <SearchOutlinedIcon />
           </SearchIconContainer>
         </Search>
-        
+
         <ButtonsContainer>
-          <IconButton>
-            <VideoCallOutlinedIcon />
-          </IconButton>
-          
-          <NotificationBadge>
-            <IconButton>
-              <NotificationsNoneOutlinedIcon />
-            </IconButton>
-          </NotificationBadge>
-          
-          <Link to="signin" style={{ textDecoration: "none" }}>
+          {currentUser ? (
+            <User>
+              <IconButton>
+                <VideoCallOutlinedIcon/>
+              </IconButton>
+              <NotificationBadge>
+                <IconButton>
+                  <NotificationsNoneOutlinedIcon />
+                </IconButton>
+              </NotificationBadge>
+              <IconButton>
+               <Avatar src="currentUser.img"/>
+              </IconButton>
+               {currentUser.name}
+            </User>
+
+          ) : (
+            <Link to="signin" style={{ textDecoration: "none" }}>
             <Button transparent>
               <AccountCircleOutlinedIcon />
-              CONNEXION
+              SIGN IN
             </Button>
-          </Link>
+          </Link>)}
         </ButtonsContainer>
       </Wrapper>
     </Container>

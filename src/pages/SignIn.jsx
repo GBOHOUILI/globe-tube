@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import GlobeTube from "../img/logo.png";
 import axios from "axios";
-
+import { useDispatch } from "react-redux";
+import { loginStart, loginSuccess, loginFailure } from "../redux/userSlice";
+import { auth, provider } from "../firebase.js";
+import { signInWithPopup } from "firebase/auth"
 // Thème violet dominant
 const theme = {
   primaryColor: "#8A2BE2", // Blueviolet
@@ -295,6 +298,9 @@ const SignIn = () => {
     password: ""
   });
 
+  const dispatch = useDispatch();
+
+
   const handleInputChange = (e) => {
     setInputs({
       ...inputs,
@@ -304,12 +310,32 @@ const SignIn = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    dispatch(loginStart());
     try{
       const res = await axios.post("/auth/login", inputs);
       console.log(res.data);
+      dispatch(loginSuccess(res.data));
     }catch(err){
-      console.log(err);
+       dispatch(loginFailure());
     }
+  }
+  const signInWithGoogle = async () =>{
+    dispatch(loginStart())
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        axios.post("/auth/google"), {
+          name:result.user.displayName,
+          email:result.user.email,
+          img:result.user.photoURL,
+        }
+       console.log(result);
+      }).then((res) => {
+        dispatch(loginSuccess(res.data))
+      })
+    .catch(error => {
+      dispatch(loginFailure())
+
+    })
   }
   return (
     <Container>
@@ -331,6 +357,12 @@ const SignIn = () => {
             onClick={() => setActiveTab("signup")}
           >
             Sign up
+          </Tab>
+          <Tab 
+            active={activeTab === "google"} 
+            onClick={signInWithGoogle}
+          >
+            Signin with Google
           </Tab>
         </TabGroup>
         
@@ -373,17 +405,15 @@ const SignIn = () => {
                 onFocus={() => setFocusedInput("password")}
                 onBlur={() => setFocusedInput(null)}
                 focused={focusedInput === "password"}
-                placeholder="Mot de passe"
+                placeholder="Password"
               />
             </InputGroup>
-            
             <Button onClick={handleLogin}>Sign In</Button>
           </FormContainer>
         ) : (
           <FormContainer>
             <Title>Create an account</Title>
             <SubTitle>Join the Globe Tube community</SubTitle>
-            
             <InputGroup>
               <InputLabel 
                 focused={focusedInput === "name"} 
@@ -440,7 +470,7 @@ const SignIn = () => {
               />
             </InputGroup>
             
-            <Button>Sign in</Button>
+            <Button>Sign Up</Button>
           </FormContainer>
         )}
 
