@@ -13,8 +13,8 @@ const Container = styled.div`
 `;
 
 const Image = styled.img`
-  width: 100%;
-  height: ${(props) => (props.type === "sm" ? "120px" : "202px")};
+  width: 60%;
+  height: ${(props) => (props.type === "sm" ? "120px" : "50%")};
   background-color: #999;
   flex: 1;
 `;
@@ -52,34 +52,40 @@ const Info = styled.div`
   font-size: 14px;
   color: #888; /* Couleur douce du texte */
 `;
-
 const Card = ({ type, video }) => {
-    const [channel, setChannel] = useState([])
-  
-  useEffect( () => {
+  const [channel, setChannel] = useState(video.channel || null);
+
+  useEffect(() => {
+    // Si les données sont déjà là (vidéo fictive)
+    if (video.channel) return;
+
     const fetchChannel = async () => {
-      const res = await axios.get(`/users/find/${video.userId}`);
-      setChannel(res.data)
-    }
-    fetchChannel()
-  },[video.userId]
-  )
+      try {
+        const res = await axios.get(`/users/find/${video.userId}`);
+        setChannel(res.data);
+      } catch (err) {
+        console.error("Erreur lors de la récupération de la chaîne :", err);
+      }
+    };
+
+    fetchChannel();
+  }, [video]);
 
   return (
     <Link to={`/videos/${video._id}`} style={{ textDecoration: "none" }}>
       <Container type={type}>
         <Image
           type={type}
-          src={video.imgUrl}
+          src={video.videoUrl}
         />
         <Details type={type}>
           <ChannelImage
             type={type}
-            src={channel.img}
+            src={channel?.img || "/default-avatar.jpg"}
           />
           <Texts>
             <Title>{video.title}</Title>
-            <ChannelName>{channel.name || "Unknown Channel"}</ChannelName>
+            <ChannelName>{channel?.name || "Chaîne inconnue"}</ChannelName>
             <Info>{video.views} views • {format(video.createdAt)}</Info>
           </Texts>
         </Details>

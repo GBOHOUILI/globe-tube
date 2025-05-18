@@ -5,7 +5,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { loginStart, loginSuccess, loginFailure } from "../redux/userSlice";
 import { auth, provider } from "../firebase.js";
-import { signInWithPopup } from "firebase/auth"
+import { signInWithPopup } from "firebase/auth";
 // Thème violet dominant
 const theme = {
   primaryColor: "#8A2BE2", // Blueviolet
@@ -62,7 +62,7 @@ const Wrapper = styled.div`
   width: 70%;
   margin: 0 auto;
   border: 1px solid ${theme.secondaryColor}40;
-  padding: 30px 50px;
+  padding: 0px 50px;
   gap: 15px;
   box-shadow: 0 10px 40px rgba(138, 43, 226, 0.2);
   transition: all 0.3s ease;
@@ -76,6 +76,7 @@ const Wrapper = styled.div`
     width: 100%;
     height: 20px;
     background: ${theme.gradient};
+
   }
   
   &:hover {
@@ -100,7 +101,7 @@ const Logo = styled.div`
   
   span {
     color: ${theme.darkColor};
-    margin-bottom: -20px;
+    margin-bottom: -40px;
   }
 `;
 
@@ -280,7 +281,7 @@ const Tab = styled.div`
 `;
 
 const Img = styled.img`
-  margin-top: 20px;
+  margin-top: 40px;
   height: 40px;
 `;
 
@@ -319,24 +320,24 @@ const SignIn = () => {
        dispatch(loginFailure());
     }
   }
-  const signInWithGoogle = async () =>{
-    dispatch(loginStart())
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        axios.post("/auth/google"), {
-          name:result.user.displayName,
-          email:result.user.email,
-          img:result.user.photoURL,
-        }
-       console.log(result);
-      }).then((res) => {
-        dispatch(loginSuccess(res.data))
-      })
-    .catch(error => {
-      dispatch(loginFailure())
-
-    })
+const signInWithGoogle = async () => {
+  dispatch(loginStart());
+  try {
+    const result = await signInWithPopup(auth, provider);
+    console.log(result);
+    const res = await axios.post("/auth/google", {
+      name: result.user.displayName,
+      email: result.user.email,
+      img: result.user.photoURL,
+    });
+    dispatch(loginSuccess(res.data));
+  } catch (error) {
+    dispatch(loginFailure());
+    console.error(error);
   }
+};
+
+
   return (
     <Container>
       <Wrapper>
@@ -353,17 +354,18 @@ const SignIn = () => {
             Sign in
           </Tab>
           <Tab 
-            active={activeTab === "signup"} 
-            onClick={() => setActiveTab("signup")}
-          >
-            Sign up
-          </Tab>
-          <Tab 
             active={activeTab === "google"} 
             onClick={signInWithGoogle}
           >
             Signin with Google
           </Tab>
+          <Tab 
+            active={activeTab === "signup"} 
+            onClick={() => setActiveTab("signup")}
+          >
+            Sign up
+          </Tab>
+         
         </TabGroup>
         
         {activeTab === "signin" ? (

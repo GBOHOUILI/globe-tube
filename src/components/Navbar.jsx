@@ -283,7 +283,7 @@ const Navbar = () => {
                 </IconButton>
               </NotificationBadge>
               <IconButton>
-               <Avatar src="currentUser.img"/>
+              <Avatar src={currentUser.img} />
               </IconButton>
                {currentUser.name}
             </User>

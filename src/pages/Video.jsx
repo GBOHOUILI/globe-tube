@@ -6,13 +6,14 @@ import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import Comments from "../components/Comments";
 import Card from "../components/Card";
-import GlobeTube from "../img/logo.png";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
-//import Video1 from "../vidéos/Video1.mp4"
+import axios from "axios";
+import { fetchFailure, fetchSuccess, fetchStart } from "../redux/videoSlice";
+import { format } from "timeago.js";
 
-// Thème violet
+// Thème violet (gardé identique)
 const theme = {
   primaryColor: "#8A2BE2", // Blueviolet
   secondaryColor: "#9370DB", // Medium Purple
@@ -22,7 +23,7 @@ const theme = {
   textColor: "#2E0854", // Dark violet
 };
 
-// Animations
+// Animations (gardées identiques)
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -46,6 +47,7 @@ const pulse = keyframes`
   }
 `;
 
+// Styles (gardés identiques)
 const Container = styled.div`
   display: flex;
   gap: 24px;
@@ -70,6 +72,7 @@ const VideoWrapper = styled.div`
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(75, 0, 130, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 300px;
   
   &:hover {
     transform: translateY(-5px);
@@ -262,105 +265,186 @@ const RecommendationTitle = styled.h3`
   font-weight: 600;
 `;
 
+// Nouveaux styles pour gérer le chargement et les erreurs
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+  background-color: ${theme.lightColor};
+  border-radius: 12px;
+  color: ${theme.primaryColor};
+  font-weight: 600;
+  font-size: 1.2rem;
+`;
+
+const LoadingSpinner = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const Spinner = styled.div`
+  width: 50px;
+  height: 50px;
+  border: 5px solid ${theme.lightColor};
+  border-top: 5px solid ${theme.primaryColor};
+  border-radius: 50%;
+  animation: ${LoadingSpinner} 1s linear infinite;
+  margin-right: 20px;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 20px;
+  background-color: #ffdddd;
+  border-radius: 8px;
+  color: #d32f2f;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 20px;
+`;
+
 const Video = () => {
+  const dispatch = useDispatch();
+  const path = useLocation().pathname.split("/")[2];
+  const [channel, setChannel] = useState({});
+  const { currentVideo } = useSelector((state) => state.video);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mockVideos, setMockVideos] = useState([]);
+
+  // Création de vidéos de recommandation fictives pour l'affichage
+  useEffect(() => {
+    // Créer des vidéos fictives pour les recommandations
+const dummyVideos = Array(8).fill().map((_, i) => ({
+  _id: `dummy-${i}`,
+  title: `Vidéo recommandée ${i + 1}`,
+  videoUrl: '/placeholder-thumbnail.jpg',
+  views: Math.floor(Math.random() * 10000),
+  createdAt: new Date().toISOString(),
+  userId: `dummy-user-${i}`,
+  channel: {
+    name: `Chaîne Démo ${i + 1}`,
+    img: '/default-avatar.jpg',
+    subscribers: Math.floor(Math.random() * 10000),
+  },
+}));
+
+    setMockVideos(dummyVideos);
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event("resize"));
     }, 100);
     return () => clearTimeout(timer);
   }, []);
 
-  const { currentUser } = useSelector((state) => state.user);
-  const dispatch = useDispatch();
+  // Récupération des données vidéo et de l'utilisateur (chaîne)
+  useEffect(() => {
+    const fetchData = async () => {
+      dispatch(fetchStart());
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const videoRes = await axios.get(`/videos/find/${path}`);
+        dispatch(fetchSuccess(videoRes.data));
+console.log(currentVideo)
 
-  const path = useLocation().pathname.split("/")[2]
+        try {
+          const channelRes = await axios.get(`/users/find/${videoRes?.data.userId}`);
+          setChannel(channelRes.data);
+        } catch (channelErr) {
+          console.warn("Erreur lors de la récupération du canal:", channelErr);
+          // Continuer même si on ne peut pas récupérer les infos du canal
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération de la vidéo:", err);
+        dispatch(fetchFailure(err.message));
+        setError("Impossible de charger la vidéo. Veuillez réessayer plus tard.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [video, setVideo] = useState({})
-  const [channel, setChannel] = useState({})
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const videoRes = await axios.get{`/videos/find/${path}`}
-  //       const channelRes = await axios.get{`/users/find/${videoRes.userId}`}
-
-  //     }catch(err){
-
-  //     }
-  //   }
-  // })
-
+    fetchData();
+  }, [path, dispatch]);
 
   return (
     <Container>
       <Content>
         <VideoWrapper>
-          <iframe
-            width="100%"
-            height="500"
-            src="https://www.youtube.com/embed/D9G1VOjN_84"
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+          {loading ? (
+            <LoadingContainer>
+              <Spinner />
+              Chargement de la vidéo...
+            </LoadingContainer>
+          ) : error ? (
+            <ErrorMessage>{error}</ErrorMessage>
+          ) : (
+            <iframe
+              width="100%"
+              height="500"
+              src="https://www.youtube.com/embed/D9G1VOjN_84"
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          )}
         </VideoWrapper>
-        <Title>Test Video</Title>
+
+        <Title>{currentVideo?.title || "Titre de la vidéo"}</Title>
+
         <Details>
-          <Info>7,948,154 views • Jun 22, 2022</Info>
+          <Info>
+            {currentVideo?.views || 0} views • {currentVideo?.createdAt ? format(currentVideo.createdAt) : "récemment"}
+          </Info>
           <Buttons>
             <Button>
-              <IconPulse>
-                <ThumbUpOutlinedIcon />
-              </IconPulse> 
-              123
+              <IconPulse><ThumbUpOutlinedIcon /></IconPulse>
+              {currentVideo?.likes?.length || 0}
             </Button>
             <Button>
-              <IconPulse>
-                <ThumbDownOffAltOutlinedIcon />
-              </IconPulse> 
-              Dislike
+              <IconPulse><ThumbDownOffAltOutlinedIcon /></IconPulse>
+              {currentVideo?.dislikes?.length || 0}
             </Button>
             <Button>
-              <IconPulse>
-                <ReplyOutlinedIcon />
-              </IconPulse> 
+              <IconPulse><ReplyOutlinedIcon /></IconPulse>
               Share
             </Button>
             <Button>
-              <IconPulse>
-                <AddTaskOutlinedIcon />
-              </IconPulse> 
+              <IconPulse><AddTaskOutlinedIcon /></IconPulse>
               Save
             </Button>
           </Buttons>
         </Details>
+
         <Hr />
+
         <Channel>
           <ChannelInfo>
-            <Image src= {GlobeTube}/>
+            <Image src={channel?.img || "/default-avatar.png"} alt="Channel" />
             <ChannelDetail>
-              <ChannelName>Eldo Dev</ChannelName>
-              <ChannelCounter>200K subscribers</ChannelCounter>
-              <Description>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                Doloribus laborum delectus unde quaerat dolore culpa sit aliquam
-                at. Vitae facere ipsum totam ratione exercitationem. Suscipit
-                animi accusantium dolores ipsam ut.
-              </Description>
+              <ChannelName>{channel?.name || "Nom de la chaîne"}</ChannelName>
+              <ChannelCounter>{channel?.subscribers || 0} subscribers</ChannelCounter>
+              <Description>{currentVideo?.desc || "Description de la vidéo"}</Description>
             </ChannelDetail>
           </ChannelInfo>
           <Subscribe>SUBSCRIBE</Subscribe>
         </Channel>
+
         <Hr />
+
         <CommentsSection>
-          <Comments />
+          <Comments videoId={path} />
         </CommentsSection>
       </Content>
+
       <Recommendation>
         <RecommendationTitle>Recommandations</RecommendationTitle>
-        {[...Array(8)].map((_, i) => (
-          <Card type="sm" key={i} />
+        {mockVideos.map((video, i) => (
+          <Card type="sm" key={i} video={video} />
         ))}
       </Recommendation>
     </Container>
