@@ -6,6 +6,8 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import VideoCallOutlinedIcon from "@mui/icons-material/VideoCallOutlined";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Upload from "./UploadVideo";
+import { useNavigate } from "react-router-dom";
 // import { Avatar } from "@mui/material";
 
 // Thème violet
@@ -235,9 +237,12 @@ const Avatar = styled.img`
 
 `
 const Navbar = () => {
+  const navigate = useNavigate();
   const [focused, setFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
   const { currentUser } = useSelector(state => state.user)
+  const [q, setQ] = useState("")
   
   useEffect(() => {
     const handleScroll = () => {
@@ -252,52 +257,57 @@ const Navbar = () => {
   }, []);
 
   return (
-    <Container style={{ 
-      boxShadow: scrolled ? "0 20px 20px rgba(0, 0, 0, 0.15)" : "none",
-      height: scrolled ? "65px" : "70px"
-    }}>
-      <Wrapper>
-        <Link to="/" style={{ textDecoration: "none" }}>
-        </Link>
-        
-        <Search focused={focused}>
-          <Input 
-            placeholder="Search" 
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-          />
-          <SearchIconContainer focused={focused}>
-            <SearchOutlinedIcon />
-          </SearchIconContainer>
-        </Search>
+    <>
 
-        <ButtonsContainer>
-          {currentUser ? (
-            <User>
-              <IconButton>
-                <VideoCallOutlinedIcon/>
-              </IconButton>
-              <NotificationBadge>
+      <Container style={{ 
+        boxShadow: scrolled ? "0 20px 20px rgba(0, 0, 0, 0.15)" : "none",
+        height: scrolled ? "65px" : "70px"
+          }}>
+        <Wrapper>
+          <Link to="/" style={{ textDecoration: "none" }}>
+          </Link>
+          
+          <Search focused={focused}>
+            <Input 
+              placeholder="Search" 
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              onChange={e=>setQ(e.target.value)}
+            />
+            <SearchIconContainer focused={focused}>
+              <SearchOutlinedIcon onClick={()=>navigate(`/search?q=${q}`)} />
+            </SearchIconContainer>
+          </Search>
+
+          <ButtonsContainer>
+            {currentUser ? (
+              <User>
                 <IconButton>
-                  <NotificationsNoneOutlinedIcon />
+                  <VideoCallOutlinedIcon onClick={() => setOpen(true)}/>
                 </IconButton>
-              </NotificationBadge>
-              <IconButton>
-              <Avatar src={currentUser.img} />
-              </IconButton>
-               {currentUser.name}
-            </User>
+                <NotificationBadge>
+                  <IconButton>
+                    <NotificationsNoneOutlinedIcon />
+                  </IconButton>
+                </NotificationBadge>
+                <IconButton>
+                <Avatar src={currentUser.img} />
+                </IconButton>
+                {currentUser.name}
+              </User>
 
-          ) : (
-            <Link to="signin" style={{ textDecoration: "none" }}>
-            <Button transparent>
-              <AccountCircleOutlinedIcon />
-              SIGN IN
-            </Button>
-          </Link>)}
-        </ButtonsContainer>
-      </Wrapper>
-    </Container>
+            ) : (
+              <Link to="signin" style={{ textDecoration: "none" }}>
+              <Button transparent>
+                <AccountCircleOutlinedIcon />
+                SIGN IN
+              </Button>
+            </Link>)}
+          </ButtonsContainer>
+        </Wrapper>
+      </Container>
+      {open && <Upload setOpen={setOpen} />}
+    </>
   );
 };
 

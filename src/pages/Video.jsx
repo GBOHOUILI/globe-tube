@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbDownOffAltOutlinedIcon from "@mui/icons-material/ThumbDownOffAltOutlined";
 import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
 import AddTaskOutlinedIcon from "@mui/icons-material/AddTaskOutlined";
 import Comments from "../components/Comments";
-import Card from "../components/Card";
+//import Card from "../components/Card";
+import Recommendation from "../components/Recommendation";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import { fetchFailure, fetchSuccess, fetchStart } from "../redux/videoSlice";
+import { fetchFailure, fetchSuccess, fetchStart, like, dislike } from "../redux/videoSlice";
+import { subscription} from "../redux/userSlice";
 import { format } from "timeago.js";
 
 // Thème violet (gardé identique)
@@ -23,7 +27,6 @@ const theme = {
   textColor: "#2E0854", // Dark violet
 };
 
-// Animations (gardées identiques)
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -47,7 +50,6 @@ const pulse = keyframes`
   }
 `;
 
-// Styles (gardés identiques)
 const Container = styled.div`
   display: flex;
   gap: 24px;
@@ -73,6 +75,7 @@ const VideoWrapper = styled.div`
   box-shadow: 0 5px 15px rgba(75, 0, 130, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   min-height: 300px;
+  max-height: 4 00px;
   
   &:hover {
     transform: translateY(-5px);
@@ -145,15 +148,15 @@ const Hr = styled.hr`
   background: linear-gradient(90deg, transparent, ${theme.secondaryColor}, transparent);
 `;
 
-const Recommendation = styled.div`
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  animation: ${fadeIn} 0.8s ease forwards;
-  animation-delay: 0.5s;
-  opacity: 0;
-`;
+// const Recommendation = styled.div`
+//   flex: 2;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 20px;
+//   animation: ${fadeIn} 0.8s ease forwards;
+//   animation-delay: 0.5s;
+//   opacity: 0;
+// `;
 
 const Channel = styled.div`
   display: flex;
@@ -259,11 +262,11 @@ const CommentsSection = styled.div`
   opacity: 0;
 `;
 
-const RecommendationTitle = styled.h3`
-  color: ${theme.primaryColor};
-  margin-bottom: 15px;
-  font-weight: 600;
-`;
+// const RecommendationTitle = styled.h3`
+//   color: ${theme.primaryColor};
+//   margin-bottom: 15px;
+//   font-weight: 600;
+// `;
 
 // Nouveaux styles pour gérer le chargement et les erreurs
 const LoadingContainer = styled.div`
@@ -303,16 +306,31 @@ const ErrorMessage = styled.div`
   margin-bottom: 20px;
 `;
 
+const VideoFrame = styled.video`
+  max-height: 800px;
+  width: 100%;
+  object-fit: cover;
+
+`;
+
+const ImageFrame = styled.img`
+  max-height: 800px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+`;
+
 const Video = () => {
   const dispatch = useDispatch();
   const path = useLocation().pathname.split("/")[2];
   const [channel, setChannel] = useState({});
   const { currentVideo } = useSelector((state) => state.video);
+  const { currentUser } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mockVideos, setMockVideos] = useState([]);
 
-  // Création de vidéos de recommandation fictives pour l'affichage
+
   useEffect(() => {
     // Créer des vidéos fictives pour les recommandations
 const dummyVideos = Array(8).fill().map((_, i) => ({
@@ -349,7 +367,6 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
       try {
         const videoRes = await axios.get(`/videos/find/${path}`);
         dispatch(fetchSuccess(videoRes.data));
-console.log(currentVideo)
 
         try {
           const channelRes = await axios.get(`/users/find/${videoRes?.data.userId}`);
@@ -370,29 +387,68 @@ console.log(currentVideo)
     fetchData();
   }, [path, dispatch]);
 
+  const handleLike = async () => {
+   await axios.put(`/users/like/${currentVideo._id}`);
+   dispatch(like(currentUser._id));
+  }
+
+  const handleDislike = async () => {
+   await axios.put(`/users/dislike/${currentVideo._id}`);
+   dispatch(dislike(currentUser._id));
+  }
+
+const [isSubscribed, setIsSubscribed] = useState(currentUser.subscribedUsers?.includes(channel._id));
+
+useEffect(() => {
+  // Si currentUser ou channel changent, on met à jour isSubscribed
+  setIsSubscribed(currentUser.subscribedUsers?.includes(channel._id));
+}, [currentUser.subscribedUsers, channel._id]);
+
+const handleSub = async () => {
+  try {
+    if (isSubscribed) {
+      await axios.put(`/users/unsub/${channel._id}`);
+    } else {
+      await axios.put(`/users/sub/${channel._id}`);
+    }
+
+    // Change le state local tout de suite pour un effet instantané
+    setIsSubscribed(!isSubscribed);
+
+    // Récupérer les données mises à jour du channel
+    const channelRes = await axios.get(`/users/find/${channel._id}`);
+    setChannel(channelRes.data);
+
+    // Mettre à jour Redux pour currentUser (abonnements)
+    dispatch(subscription(channel._id));
+
+  } catch (error) {
+    console.error("Erreur lors de l'abonnement :", error);
+  }
+};
+
+
   return (
     <Container>
       <Content>
         <VideoWrapper>
-          {loading ? (
-            <LoadingContainer>
-              <Spinner />
-              Chargement de la vidéo...
-            </LoadingContainer>
-          ) : error ? (
-            <ErrorMessage>{error}</ErrorMessage>
-          ) : (
-            <iframe
-              width="100%"
-              height="500"
-              src="https://www.youtube.com/embed/D9G1VOjN_84"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          )}
-        </VideoWrapper>
+            {loading ? (
+              <LoadingContainer>
+                <Spinner />
+                Chargement de la vidéo...
+              </LoadingContainer>
+            ) : error ? (
+              <ErrorMessage>{error}</ErrorMessage>
+            ) : currentVideo?.videoUrl ? (
+              <VideoFrame controls>
+                <source src={currentVideo.videoUrl} type="video/mp4" />
+                Votre navigateur ne supporte pas la lecture vidéo.
+              </VideoFrame>
+            ) : (
+              <ImageFrame src={currentVideo.imgUrl || "/placeholder-thumbnail.jpg"} alt="Aperçu de la vidéo" />
+            )}
+          </VideoWrapper>
+
 
         <Title>{currentVideo?.title || "Titre de la vidéo"}</Title>
 
@@ -401,12 +457,21 @@ console.log(currentVideo)
             {currentVideo?.views || 0} views • {currentVideo?.createdAt ? format(currentVideo.createdAt) : "récemment"}
           </Info>
           <Buttons>
-            <Button>
-              <IconPulse><ThumbUpOutlinedIcon /></IconPulse>
+            <Button onClick={handleLike}>
+              {currentVideo.likes?.includes(currentUser._id) ? (
+                <ThumbUpIcon />
+              ) : (
+                <ThumbUpOutlinedIcon />
+              )}{" "}
               {currentVideo?.likes?.length || 0}
             </Button>
-            <Button>
-              <IconPulse><ThumbDownOffAltOutlinedIcon /></IconPulse>
+
+            <Button onClick={handleDislike}>
+              {currentVideo.dislikes?.includes(currentUser._id) ? (
+                <ThumbDownIcon />
+              ) : (
+                <ThumbDownOffAltOutlinedIcon />
+              )}{" "}
               {currentVideo?.dislikes?.length || 0}
             </Button>
             <Button>
@@ -424,29 +489,28 @@ console.log(currentVideo)
 
         <Channel>
           <ChannelInfo>
-            <Image src={channel?.img || "/default-avatar.png"} alt="Channel" />
+            <Image src={channel?.img || "/default-avatar.jpg"} alt="Channel" />
             <ChannelDetail>
               <ChannelName>{channel?.name || "Nom de la chaîne"}</ChannelName>
               <ChannelCounter>{channel?.subscribers || 0} subscribers</ChannelCounter>
               <Description>{currentVideo?.desc || "Description de la vidéo"}</Description>
             </ChannelDetail>
           </ChannelInfo>
-          <Subscribe>SUBSCRIBE</Subscribe>
+          <Subscribe onClick={handleSub}>{isSubscribed
+           ? "SUBSCRIBED"
+           : "SUBSCRIBE"}
+          </Subscribe>
         </Channel>
 
         <Hr />
 
         <CommentsSection>
-          <Comments videoId={path} />
+          <Comments videoId={currentVideo._id} />
         </CommentsSection>
       </Content>
 
-      <Recommendation>
-        <RecommendationTitle>Recommandations</RecommendationTitle>
-        {mockVideos.map((video, i) => (
-          <Card type="sm" key={i} video={video} />
-        ))}
-      </Recommendation>
+      <Recommendation tags={currentVideo._id}/>
+
     </Container>
   );
 };

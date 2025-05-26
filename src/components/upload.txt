@@ -1,89 +1,6 @@
-        <ButtonsContainer>
-          <IconButton>
-            <VideoCallOutlinedIcon />
-          </IconButton>
-          
-          <NotificationBadge>
-            <IconButton>
-              <NotificationsNoneOutlinedIcon />
-            </IconButton>
-          </NotificationBadge>
-          <Avatar/>
-
-
-                  </ButtonsContainer>
-
-
-const firebaseConfig = {
-    apiKey: "AIzaSyAu3Vd5EZ0xmthmHcGEsyLEzbSChguky-w",
-    authDomain:"video-7801c.firebaseapp.com",
-    projectId:"video-7801c",
-    storageBucket: "video-7801c.appspot.com",
-    messagingSenderId: "130073115219",
-    appId: "1:130073115219:web:365035e1474abbe7fba4a6"
-};
-
-
-
-
-            <FormGroup>
-              <Label>Video File <RequiredStar>*</RequiredStar></Label>
-              <FileDropZone
-                isDragging={isDragging}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById("fileInput").click()}
-                accept="video/*"
-              >
-                <UploadIconWrapper>
-                  <Upload size={32} />
-                </UploadIconWrapper>
-                {selectedFile ? (
-                  <FileInfo>
-                    <FileName>{selectedFile.name}</FileName>
-                    <FileSize>
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </FileSize>
-                    <RemoveButton type="button" onClick={removeFile}>
-                      <X size={16} /> Remove file
-                    </RemoveButton>
-                  </FileInfo>
-                ) : (
-                  <p>Drag & drop a video file here, or click to browse</p>
-                )}
-                <input
-                  id="fileInput"
-                  type="file"
-                  accept="video/*"
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                />
-              </FileDropZone>
-            </FormGroup>
-            const FileDropZone = styled.div`
-  border: 2px dashed #b39ddb;
-  border-radius: 16px;
-  padding: 3rem 2rem;
-  text-align: center;
-  cursor: pointer;
-  background-color: ${({ isDragging }) => (isDragging ? "#ede7f6" : "transparent")};
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  &:hover {
-    border-color: #9575cd;
-    background-color: #ede7f6;
-  }
-`;
-
-
-
-
-
-UploadVideo.jsx
-
-
 import React, { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
+
 
 const theme = {
   primaryColor: "#8A2BE2",
@@ -241,6 +158,7 @@ const UploadVideo = ({ setOpen }) => {
   const [desc, setDesc] = useState("");
   const [tags, setTags] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [inputs, setInputs] = useState({});
 
   const wrapperRef = useRef(null);
   const pos = useRef({ x: 0, y: 0 });
@@ -263,6 +181,16 @@ const UploadVideo = ({ setOpen }) => {
     document.removeEventListener("mousemove", onDrag);
     document.removeEventListener("mouseup", stopDrag);
   };
+  const handleChange = (e) => {
+    setInputs(prev => {
+      return {
+        ...prev,
+        [e.target.name]: e.target.value
+      }
+    })
+  
+
+  };
   const handleTags = (e) => {
     setTags(e.target.value.split(",").map((tag) => tag.trim()))
   }
@@ -275,9 +203,9 @@ const uploadFile = async (file) => {
 
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "gbobe_tube"); 
+  formData.append("upload_preset","gbobe_tube"); 
 
-  const cloudName = "duptzhpjl"; 
+  const cloudName = "duptzhpjl" ; 
 
   try {
     const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
@@ -316,7 +244,7 @@ const uploadFile = async (file) => {
         <FileDropZone
           isDragging={isDragging}
           onDragOver={(e) => {
-            e.preventDefault();
+            e.preventDefault(); 
             setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
@@ -335,6 +263,7 @@ const uploadFile = async (file) => {
           </UploadIcon>
           <UploadText>Glissez-déposez votre vidéo ici</UploadText>
           <input
+            name="video"
             type="file"
             accept="video/*"
             onChange={(e) => setVideo(e.target.files[0])}
@@ -342,20 +271,23 @@ const uploadFile = async (file) => {
         </FileDropZone>
 
         <Input
+          name="title"
           type="text"
           placeholder="Title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleChange}
         />
 
         <Desc
+          name="desc"
           placeholder="Description"
           rows={5}
           value={desc}
-          onChange={(e) => setDesc(e.target.value)}
+          onChange={handleChange}
         />
 
         <Input
+          name="tags"
           type="text"
           placeholder="Separate tags with commas"
           onChange={handleTags}
@@ -384,6 +316,7 @@ const uploadFile = async (file) => {
           </UploadIcon>
           <UploadText>Glissez-déposez votre image ici</UploadText>
           <input
+            name="img"
             type="file"
             accept="image/*"
             onChange={(e) => setImg(e.target.files[0])}

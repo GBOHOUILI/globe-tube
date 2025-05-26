@@ -16,8 +16,11 @@ import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import OutlinedFlagRoundedIcon from "@mui/icons-material/OutlinedFlagRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { logout } from "../redux/userSlice";
+import { useDispatch } from "react-redux";
+
 
 // Thème violet
 const theme = {
@@ -269,11 +272,18 @@ const CategorySection = styled.div`
 
 const Menu = () => {
   const [activeItem, setActiveItem] = useState("Home");
+  const dispatch = useDispatch();
+  const navigate = useNavigate()
   
   const handleItemClick = (itemName) => {
     setActiveItem(itemName);
   };
-  const { currentUser } = useSelector((state) => state.user)
+  const { currentUser } = useSelector((state) => state.user);
+  const handleLogout = async (e) => {
+      e.preventDefault();
+      navigate('signin')
+      dispatch(logout());
+  }
   return (
     <Container>
       <Wrapper>
@@ -334,7 +344,16 @@ const Menu = () => {
         </CategorySection>
         
         <Hr />
+            {currentUser && 
+              <>
+            <Button onClick={handleLogout}>
+              <PersonRoundedIcon />
+              LOG OUT
+            </Button>
         
+        <Hr />
+      </>        
+}
     {!currentUser && 
       <>
         <Login>

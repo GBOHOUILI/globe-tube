@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { loginStart, loginSuccess, loginFailure } from "../redux/userSlice";
 import { auth, provider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
+import { useNavigate  } from "react-router-dom";
 // Thème violet dominant
 const theme = {
   primaryColor: "#8A2BE2", // Blueviolet
@@ -291,6 +292,7 @@ const FormContainer = styled.div`
 `;
 
 const SignIn = () => {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("signin");
   const [focusedInput, setFocusedInput] = useState(null);
   const [inputs, setInputs] = useState({
@@ -316,6 +318,7 @@ const SignIn = () => {
       const res = await axios.post("/auth/login", inputs);
       console.log(res.data);
       dispatch(loginSuccess(res.data));
+      navigate("/")
     }catch(err){
        dispatch(loginFailure());
     }
@@ -331,6 +334,7 @@ const signInWithGoogle = async () => {
       img: result.user.photoURL,
     });
     dispatch(loginSuccess(res.data));
+    navigate("/");
   } catch (error) {
     dispatch(loginFailure());
     console.error(error);

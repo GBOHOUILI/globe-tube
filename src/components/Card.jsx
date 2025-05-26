@@ -13,8 +13,8 @@ const Container = styled.div`
 `;
 
 const Image = styled.img`
-  width: 60%;
-  height: ${(props) => (props.type === "sm" ? "120px" : "50%")};
+  width:${(props) => (props.type === "sm" ? "90px" : "100%")};;
+  height: ${(props) => (props.type === "sm" ? "90px" : "202px")};
   background-color: #999;
   flex: 1;
 `;
@@ -56,7 +56,7 @@ const Card = ({ type, video }) => {
   const [channel, setChannel] = useState(video.channel || null);
 
   useEffect(() => {
-    // Si les données sont déjà là (vidéo fictive)
+    // Si les données sont déjà là (vidéo fictive), pas besoin de fetch
     if (video.channel) return;
 
     const fetchChannel = async () => {

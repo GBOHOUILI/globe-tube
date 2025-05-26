@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Video from "./pages/Video";
 import SignIn from "./pages/SignIn";
+import Search from "./pages/Search";
 
 // Définition du thème violet
 const theme = {
@@ -130,6 +131,7 @@ function App() {
                     <Route index element={<Home type="random"/>} />
                     <Route path="trends" element={<Home type="trend"/>} />
                     <Route path="subscriptions" element={<Home type="sub"/>} />
+                    <Route path="search" element={<Search />} />
                     <Route path="signin" element={<SignIn />} />
                     <Route path="videos">
                       <Route path=":id" element={<Video />} />
