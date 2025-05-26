@@ -342,7 +342,7 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
   userId: `dummy-user-${i}`,
   channel: {
     name: `Chaîne Démo ${i + 1}`,
-    img: '/default-avatar.jpg',
+    img: '',
     subscribers: Math.floor(Math.random() * 10000),
   },
 }));
@@ -421,13 +421,11 @@ const handleSub = async () => {
 
     // Mettre à jour Redux pour currentUser (abonnements)
     dispatch(subscription(channel._id));
-
   } catch (error) {
     console.error("Erreur lors de l'abonnement :", error);
   }
+  
 };
-
-
   return (
     <Container>
       <Content>
@@ -440,7 +438,7 @@ const handleSub = async () => {
             ) : error ? (
               <ErrorMessage>{error}</ErrorMessage>
             ) : currentVideo?.videoUrl ? (
-              <VideoFrame controls>
+              <VideoFrame  controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()}>
                 <source src={currentVideo.videoUrl} type="video/mp4" />
                 Votre navigateur ne supporte pas la lecture vidéo.
               </VideoFrame>
@@ -509,7 +507,7 @@ const handleSub = async () => {
         </CommentsSection>
       </Content>
 
-      <Recommendation tags={currentVideo._id}/>
+      <Recommendation tags={currentVideo.tags}/>
 
     </Container>
   );

@@ -26,21 +26,27 @@ const Container = styled.div`
 
 const Recommendation = ({tags}) => {
     const [videos,setVideos] = useState([]);
+useEffect(() => {
+  const fetchVideos = async () => {
+    if (!tags || tags.length === 0) return;
+    try {
+      const res = await axios.get(`/videos/tags?tags=${tags.join(",")}`);
+      setVideos(res.data);
+      console.log(res.data)
+    } catch (err) {
+      console.error("Erreur lors de la récupération des vidéos :", err);
+    }
+  };
+  fetchVideos();
+}, [tags]);
 
-    useEffect(() => {
-        const fetchVideos = async () => {
-            const res = await axios.get(`/videos/tags?tags=${tags}`)
-            setVideos(res.data)
-        };
-        fetchVideos();
-    }, [tags]);
 
     return (
-        <Container>
-            {videos.map(video=> {
-                <Card type="sm" key={video._id}  video={video}/>
-            })}
-        </Container>
+    <Container>
+      {videos.map(video => (
+        <Card type="sm" key={video._id} video={video} />
+      ))}
+    </Container>
     )
 }
 export default Recommendation

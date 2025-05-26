@@ -295,6 +295,7 @@ const SignIn = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("signin");
   const [focusedInput, setFocusedInput] = useState(null);
+  
   const [inputs, setInputs] = useState({
     name: "",
     email: "",
@@ -331,8 +332,10 @@ const signInWithGoogle = async () => {
     const res = await axios.post("/auth/google", {
       name: result.user.displayName,
       email: result.user.email,
-      img: result.user.photoURL,
+      img: result.metadata.photoURL,
     });
+          console.log(res.data.name)
+      console.log(res.data.img)
     dispatch(loginSuccess(res.data));
     navigate("/");
   } catch (error) {
