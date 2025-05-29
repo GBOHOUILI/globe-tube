@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useParams, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Card from '../components/Card';
+const url="https://bakend-globe-tube.onrender.com/api";
 
 const theme = {
   primaryColor: '#8A2BE2',
@@ -344,7 +345,7 @@ function UserProfile() {
   useEffect(() => {
     setIsLoading(true);
     axios
-      .get(`/users/find/${userId}`)
+      .get(`${url}/users/find/${userId}`)
       .then(res => {
         setUser(res.data);
         setFormData({
@@ -370,7 +371,7 @@ function UserProfile() {
       setVideosLoading(true);
       setVideosError(null);
       try {
-        const res = await axios.get(`/videos/user/${userId}`);
+        const res = await axios.get(`${url}/videos/user/${userId}`);
         setVideos(res.data || []);
         setVideosLoading(false);
       } catch (err) {
@@ -412,7 +413,7 @@ function UserProfile() {
 
   const handleSubscribeToggle = async () => {
     try {
-      const endpoint = isSubscribed ? `/users/unsub/${userId}` : `/users/sub/${userId}`;
+      const endpoint = isSubscribed ? `${url}/users/unsub/${userId}` : `${url}/users/sub/${userId}`;
       const res = await axios.put(endpoint);
       setUser(res.data);
     } catch (err) {
@@ -481,7 +482,7 @@ function UserProfile() {
         updateData.password = formData.password;
       }
 
-      const res = await axios.put(`/users/${userId}`, updateData);
+      const res = await axios.put(`${url}/users/${userId}`, updateData);
       setUser(res.data);
       setIsEditing(false);
       setImageFile(null);

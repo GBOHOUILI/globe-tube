@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import Card from "../components/Card";
 import styled, { keyframes } from "styled-components";
+const url="https://bakend-globe-tube.onrender.com/api";
 
 const fadeIn = keyframes`
   from {
@@ -30,7 +31,7 @@ useEffect(() => {
   const fetchVideos = async () => {
     if (!tags || tags.length === 0) return;
     try {
-      const res = await axios.get(`/videos/tags?tags=${tags.join(",")}`);
+      const res = await axios.get(`${url}/videos/tags?tags=${tags.join(",")}`);
       setVideos(res.data);
     } catch (err) {
       console.error("Erreur lors de la récupération des vidéos :", err);

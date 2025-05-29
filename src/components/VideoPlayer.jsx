@@ -4,6 +4,7 @@ import socket from '../socket';
 import axios from 'axios';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+const url="https://bakend-globe-tube.onrender.com/api";
 
 
 const PlayerWrapper = styled.div`
@@ -29,7 +30,7 @@ function VideoPlayer({ roomId }) {
     const videoId = query.get('videoId');
 
     if (videoId) {
-      axios.get(`/videos/find/${videoId}`)
+      axios.get(`${url}/videos/find/${videoId}`)
         .then(res => {
           setVideoUrl(res.data.videoUrl);
         })

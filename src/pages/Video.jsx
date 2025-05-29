@@ -18,6 +18,7 @@ import { fetchFailure, fetchSuccess, fetchStart, like, dislike } from "../redux/
 import { subscription} from "../redux/userSlice";
 import { format } from "timeago.js";
 import { v4 as uuidv4 } from "uuid";
+const url="https://bakend-globe-tube.onrender.com/api";
 
 
 
@@ -378,12 +379,12 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
       setError(null);
       
       try {
-        const videoRes = await axios.get(`/videos/find/${path}`);
+        const videoRes = await axios.get(`${url}/videos/find/${path}`);
         dispatch(fetchSuccess(videoRes.data));
-              await axios.put(`/videos/view/${path}`);
+              await axios.put(`${url}/videos/view/${path}`);
 
         try {
-          const channelRes = await axios.get(`/users/find/${videoRes?.data.userId}`);
+          const channelRes = await axios.get(`${url}/users/find/${videoRes?.data.userId}`);
           setChannel(channelRes.data);
         } catch (channelErr) {
           console.warn("Erreur lors de la récupération du canal:", channelErr);
@@ -402,12 +403,12 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
   }, [path, dispatch]);
 
   const handleLike = async () => {
-   await axios.put(`/users/like/${currentVideo._id}`);
+   await axios.put(`${url}/users/like/${currentVideo._id}`);
    dispatch(like(currentUser._id));
   }
 
   const handleDislike = async () => {
-   await axios.put(`/users/dislike/${currentVideo._id}`);
+   await axios.put(`${url}/users/dislike/${currentVideo._id}`);
    dispatch(dislike(currentUser._id));
   }
 
@@ -421,16 +422,16 @@ useEffect(() => {
 const handleSub = async () => {
   try {
     if (isSubscribed) {
-      await axios.put(`/users/unsub/${channel._id}`);
+      await axios.put(`${url}/users/unsub/${channel._id}`);
     } else {
-      await axios.put(`/users/sub/${channel._id}`);
+      await axios.put(`${url}/users/sub/${channel._id}`);
     }
 
     // Change le state local tout de suite pour un effet instantané
     setIsSubscribed(!isSubscribed);
 
     // Récupérer les données mises à jour du channel
-    const channelRes = await axios.get(`/users/find/${channel._id}`);
+    const channelRes = await axios.get(`${url}/users/find/${channel._id}`);
     setChannel(channelRes.data);
 
     // Mettre à jour Redux pour currentUser (abonnements)

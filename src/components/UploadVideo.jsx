@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+const url="https://bakend-globe-tube.onrender.com/api";
 
 
 
@@ -548,7 +549,7 @@ const UploadVideo = ({ setOpen }) => {
     
     try {
   
-      const response = await axios.post('/videos', videoData, {
+      const response = await axios.post(`${url}/videos`, videoData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total

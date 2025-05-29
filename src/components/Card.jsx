@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import {format} from "timeago.js";
 import axios from "axios";
-import { useSelector } from "react-redux";
+const url="https://bakend-globe-tube.onrender.com/api";
 
 const Container = styled.div`
   width: ${(props) => props.type !== "sm" && "300px"};
@@ -59,7 +59,6 @@ const Info = styled.div`
 `;
 const Card = ({ type, video }) => {
   const [channel, setChannel] = useState(video.channel || null);
-  const currentUser = useSelector((state) => state.user.currentUser);
 
   useEffect(() => {
     // Si les données sont déjà là (vidéo fictive), pas besoin de fetch
@@ -67,7 +66,7 @@ const Card = ({ type, video }) => {
 
     const fetchChannel = async () => {
       try {
-        const res = await axios.get(`/users/find/${video.userId}`);
+        const res = await axios.get(`${url}/users/find/${video.userId}`);
         setChannel(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération de la chaîne :", err);
