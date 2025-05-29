@@ -16,69 +16,49 @@ import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import OutlinedFlagRoundedIcon from "@mui/icons-material/OutlinedFlagRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
-import { useDispatch } from "react-redux";
-
 
 // Thème violet
 const theme = {
-  primaryColor: "#8A2BE2", // Blueviolet
-  secondaryColor: "#9370DB", // Medium Purple
-  accentColor: "#BA55D3", // Medium orchid
-  lightColor: "#F5F0FF", // Lavender très léger
-  darkColor: "#4B0082", // Indigo
-  textColor: "#2E0854", // Dark violet
+  primaryColor: "#8A2BE2",
+  secondaryColor: "#9370DB",
+  accentColor: "#BA55D3",
+  lightColor: "#F5F0FF",
+  darkColor: "#4B0082",
+  textColor: "#2E0854",
   gradient: "linear-gradient(135deg, #8A2BE2, #4B0082)",
 };
 
 // Animations
 const float = keyframes`
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 `;
 
 const pulse = keyframes`
-  0% {
-    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(138, 43, 226, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0);
-  }
+  0% { box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(138, 43, 226, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(138, 43, 226, 0); }
 `;
 
 const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const glowEffect = keyframes`
-  0% {
-    text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(138, 43, 226, 0.8), 0 0 20px rgba(147, 112, 219, 0.5);
-  }
-  100% {
-    text-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
-  }
+  0% { text-shadow: 0 0 5px rgba(138, 43, 226, 0.5); }
+  50% { text-shadow: 0 0 15px rgba(138, 43, 226, 0.8), 0 0 20px rgba(147, 112, 219, 0.5); }
+  100% { text-shadow: 0 0 5px rgba(138, 43, 226, 0.5); }
+`;
+
+const slideIn = keyframes`
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 `;
 
 const Container = styled.div`
@@ -96,6 +76,45 @@ const Container = styled.div`
   
   &:hover {
     box-shadow: 5px 0 20px rgba(138, 43, 226, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    z-index: 1000;
+    transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(-100%)')};
+    animation: ${props => props.isOpen ? slideIn : ''} 0.3s ease-out;
+  }
+`;
+
+const HamburgerButton = styled.button`
+  display: none;
+  position: fixed;
+  top: 30px;
+  left: 15px;
+  z-index: 1001;
+  background: ${theme.gradient};
+  border: none;
+  border-radius: 2;
+  padding: 2px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(138, 43, 226, 0.3);
+  transition: all 0.3s ease;
+
+  svg {
+    color: white;
+    font-size: 28px;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+  }
+
+  @media (max-width: 768px) {
+    display: block;
   }
 `;
 
@@ -272,176 +291,191 @@ const CategorySection = styled.div`
 
 const Menu = () => {
   const [activeItem, setActiveItem] = useState("Home");
+  const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   
   const handleItemClick = (itemName) => {
     setActiveItem(itemName);
+    setIsOpen(false); // Close sidebar on item click (mobile)
   };
-  const { currentUser } = useSelector((state) => state.user);
-  const handleLogout = async (e) => {
-      e.preventDefault();
-      navigate('signin')
-      dispatch(logout());
-  }
-  return (
-    <Container>
-      <Wrapper>
-        <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-          <Logo>
-            <Img src={GlobeTube} />
-            GlobeTube
-          </Logo>
-        </Link>
-        
-        <CategorySection>
-          <Link to="/" style={{textDecoration:"none", color:"inherit"}}>
-            <Item 
-              className={activeItem === "Home" ? "active" : ""} 
-              onClick={() => handleItemClick("Home")}>
-              <HomeRoundedIcon />
-              Home
-            </Item>
-          </Link>
 
-          <Link to="trends" style={{textDecoration:"none", color:"inherit"}}>
-            <Item 
-            className={activeItem === "Explore" ? "active" : ""} 
-            onClick={() => handleItemClick("Explore")}>
-            <ExploreRoundedIcon />
-            Explore
-            </Item>
+  const { currentUser } = useSelector((state) => state.user);
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    navigate('/signin');
+    dispatch(logout());
+    setIsOpen(false); // Close sidebar on logout
+  };
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <>
+      <HamburgerButton onClick={toggleMenu}>
+        <MenuRoundedIcon />
+      </HamburgerButton>
+      <Container isOpen={isOpen}>
+        <Wrapper>
+          <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+            <Logo>
+              <Img src={GlobeTube} />
+              GlobeTube
+            </Logo>
           </Link>
           
-          <Link to="subscriptions" style={{textDecoration:"none", color:"inherit"}}>
-            <Item 
-            className={activeItem === "Subscriptions" ? "active" : ""} 
-            onClick={() => handleItemClick("Subscriptions")}>
-            <SubscriptionsRoundedIcon />
-            Subscriptions
-          </Item>
-          </Link>
+          <CategorySection>
+            <Link to="/" style={{textDecoration:"none", color:"inherit"}}>
+              <Item 
+                className={activeItem === "Home" ? "active" : ""} 
+                onClick={() => handleItemClick("Home")}>
+                <HomeRoundedIcon />
+                Home
+              </Item>
+            </Link>
 
-        </CategorySection>
-        
-        <Hr />
-        
-        <CategorySection>
-          <Item 
-            className={activeItem === "Library" ? "active" : ""} 
-            onClick={() => handleItemClick("Library")}
-          >
-            <VideoLibraryRoundedIcon />
-            Library
-          </Item>
-          <Item 
-            className={activeItem === "History" ? "active" : ""} 
-            onClick={() => handleItemClick("History")}
-          >
-            <HistoryRoundedIcon />
-            History
-          </Item>
-        </CategorySection>
-        
-        <Hr />
-            {currentUser && 
-              <>
-            <Button onClick={handleLogout}>
-              <PersonRoundedIcon />
-              LOG OUT
-            </Button>
-        
-        <Hr />
-      </>        
-}
-    {!currentUser && 
-      <>
-        <Login>
-          Sign in to like videos, comment, and subscribe.
-          <Link to="signin" style={{textDecoration:"none"}}>
-            <Button>
-              <PersonRoundedIcon />
-              SIGN IN
-            </Button>
-          </Link>
-        </Login>
-        
-        <Hr />
-      </>        
-    }
-        <Title>Tendances</Title>
-        <CategorySection>
-          <Item 
-            className={activeItem === "Music" ? "active" : ""} 
-            onClick={() => handleItemClick("Music")}
-          >
-            <MusicNoteRoundedIcon />
-            Music
-          </Item>
-          <Item 
-            className={activeItem === "Sports" ? "active" : ""} 
-            onClick={() => handleItemClick("Sports")}
-          >
-            <SportsSoccerRoundedIcon />
-            Sports
-          </Item>
-          <Item 
-            className={activeItem === "Gaming" ? "active" : ""} 
-            onClick={() => handleItemClick("Gaming")}
-          >
-            <SportsEsportsRoundedIcon />
-            Gaming
-          </Item>
-          <Item 
-            className={activeItem === "Movies" ? "active" : ""} 
-            onClick={() => handleItemClick("Movies")}
-          >
-            <TheatersRoundedIcon />
-            Movies
-          </Item>
-          <Item 
-            className={activeItem === "News" ? "active" : ""} 
-            onClick={() => handleItemClick("News")}
-          >
-            <FeedRoundedIcon />
-            News
-          </Item>
-          <Item 
-            className={activeItem === "Live" ? "active" : ""} 
-            onClick={() => handleItemClick("Live")}
-          >
-            <StreamRoundedIcon />
-            Live
-          </Item>
-        </CategorySection>
-        
-        <Hr />
-        
-        <CategorySection>
-          <Item 
-            className={activeItem === "Settings" ? "active" : ""} 
-            onClick={() => handleItemClick("Settings")}
-          >
-            <SettingsRoundedIcon />
-            Settings
-          </Item>
-          <Item 
-            className={activeItem === "Report" ? "active" : ""} 
-            onClick={() => handleItemClick("Report")}
-          >
-            <OutlinedFlagRoundedIcon />
-            Report
-          </Item>
-          <Item 
-            className={activeItem === "Help" ? "active" : ""} 
-            onClick={() => handleItemClick("Help")}
-          >
-            <HelpRoundedIcon />
-            Help
-          </Item>
-        </CategorySection>
-      </Wrapper>
-    </Container>
+            <Link to="/trends" style={{textDecoration:"none", color:"inherit"}}>
+              <Item 
+                className={activeItem === "Explore" ? "active" : ""} 
+                onClick={() => handleItemClick("Explore")}>
+                <ExploreRoundedIcon />
+                Explore
+              </Item>
+            </Link>
+            
+            <Link to="/subscriptions" style={{textDecoration:"none", color:"inherit"}}>
+              <Item 
+                className={activeItem === "Subscriptions" ? "active" : ""} 
+                onClick={() => handleItemClick("Subscriptions")}>
+                <SubscriptionsRoundedIcon />
+                Subscriptions
+              </Item>
+            </Link>
+          </CategorySection>
+          
+          <Hr />
+          
+          <CategorySection>
+            <Item 
+              className={activeItem === "Library" ? "active" : ""} 
+              onClick={() => handleItemClick("Library")}
+            >
+              <VideoLibraryRoundedIcon />
+              Library
+            </Item>
+            <Item 
+              className={activeItem === "History" ? "active" : ""} 
+              onClick={() => handleItemClick("History")}
+            >
+              <HistoryRoundedIcon />
+              History
+            </Item>
+          </CategorySection>
+          
+          <Hr />
+          
+          {currentUser && 
+            <>
+              <Button onClick={handleLogout}>
+                <PersonRoundedIcon />
+                LOG OUT
+              </Button>
+              <Hr />
+            </>        
+          }
+          
+          {!currentUser && 
+            <>
+              <Login>
+                Sign in to like videos, comment, and subscribe.
+                <Link to="/signin" style={{textDecoration:"none"}}>
+                  <Button>
+                    <PersonRoundedIcon />
+                    SIGN IN
+                  </Button>
+                </Link>
+              </Login>
+              <Hr />
+            </>        
+          }
+          
+          <Title>Tendances</Title>
+          <CategorySection>
+            <Item 
+              className={activeItem === "Music" ? "active" : ""} 
+              onClick={() => handleItemClick("Music")}
+            >
+              <MusicNoteRoundedIcon />
+              Music
+            </Item>
+            <Item 
+              className={activeItem === "Sports" ? "active" : ""} 
+              onClick={() => handleItemClick("Sports")}
+            >
+              <SportsSoccerRoundedIcon />
+              Sports
+            </Item>
+            <Item 
+              className={activeItem === "Gaming" ? "active" : ""} 
+              onClick={() => handleItemClick("Gaming")}
+            >
+              <SportsEsportsRoundedIcon />
+              Gaming
+            </Item>
+            <Item 
+              className={activeItem === "Movies" ? "active" : ""} 
+              onClick={() => handleItemClick("Movies")}
+            >
+              <TheatersRoundedIcon />
+              Movies
+            </Item>
+            <Item 
+              className={activeItem === "News" ? "active" : ""} 
+              onClick={() => handleItemClick("News")}
+            >
+              <FeedRoundedIcon />
+              News
+            </Item>
+            <Item 
+              className={activeItem === "Live" ? "active" : ""} 
+              onClick={() => handleItemClick("Live")}
+            >
+              <StreamRoundedIcon />
+              Live
+            </Item>
+          </CategorySection>
+          
+          <Hr />
+          
+          <CategorySection>
+            <Item 
+              className={activeItem === "Settings" ? "active" : ""} 
+              onClick={() => handleItemClick("Settings")}
+            >
+              <SettingsRoundedIcon />
+              Settings
+            </Item>
+            <Item 
+              className={activeItem === "Report" ? "active" : ""} 
+              onClick={() => handleItemClick("Report")}
+            >
+              <OutlinedFlagRoundedIcon />
+              Report
+            </Item>
+            <Item 
+              className={activeItem === "Help" ? "active" : ""} 
+              onClick={() => handleItemClick("Help")}
+            >
+              <HelpRoundedIcon />
+              Help
+            </Item>
+          </CategorySection>
+        </Wrapper>
+      </Container>
+    </>
   );
 };
 

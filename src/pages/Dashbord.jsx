@@ -18,7 +18,7 @@ const theme = {
 // Styled components
 const ProfileContainer = styled.div`
   position: relative;
-  padding: 20px;
+  padding: 0;
   width: 90%;
   margin: 20px auto;
   background: linear-gradient(135deg, ${theme.lightColor} 0%, #ffffff 100%);
@@ -34,6 +34,7 @@ const ProfileContainer = styled.div`
 `;
 
 const ProfileHeader = styled.div`
+padding:20px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -115,6 +116,7 @@ const ActionButtons = styled.div`
 const EditButton = styled.button`
   background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor});
   color: white;
+  margin-left:120px;
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -156,12 +158,15 @@ const SubscribeButton = styled(EditButton)`
 `;
 
 const VideosSection = styled.section`
+  box-shadow: 0 6px 6px rgba(138, 43, 226, 0.1);
+  height:100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 20px 60px;
   margin-top: 24px;
-  padding: 16px;
-    background-color:none;
-  border-radius: 12px;
-  border: 1px solid ${theme.primaryColor}10;
-
+  border-radius: 20px;
+  border: 2px solid ${theme.primaryColor}10;
   @media (max-width: 768px) {
     padding: 12px;
   }
@@ -171,23 +176,17 @@ const VideosTitle = styled.h3`
   font-size: 1.25rem;
   font-weight: 600;
   color: ${theme.textColor};
-  margin: 0 0 16px;
+  margin: 16px;
 `;
 
 const VideosGrid = styled.div`
-  display: flex;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  background-color:none;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+width:100%;
+    display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 0 50px;
 `;
+
 
 const VideoCardWrapper = styled.div`
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -620,8 +619,8 @@ function UserProfile() {
           </FormButtons>
         </EditForm>
       )}
+              <VideosTitle>Vidéos de {user.name || 'Utilisateur'}</VideosTitle>
             <VideosSection>
-        <VideosTitle>Vidéos de {user.name || 'Utilisateur'}</VideosTitle>
         {videosLoading ? (
           <LoadingMessage>Chargement des vidéos...</LoadingMessage>
         ) : videosError ? (

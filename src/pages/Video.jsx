@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
@@ -465,7 +466,7 @@ const handleSub = async () => {
                 Votre navigateur ne supporte pas la lecture vidéo.
               </VideoFrame>
             ) : (
-              <ImageFrame src={currentVideo.imgUrl || "/default-avatar.jpg"} alt="Aperçu de la vidéo" />
+              <ImageFrame src={currentVideo.imgUrl} alt="Aperçu de la vidéo" />
             )}
           </VideoWrapper>
 
@@ -510,14 +511,16 @@ const handleSub = async () => {
         <Hr />
 
         <Channel>
+          <Link to={`/dashbord/${channel._id}` }style={{ textDecoration: "none" }}>
           <ChannelInfo>
-            <Image src={channel?.img || "/default-avatar.jpg"} alt="Channel" />
+            <Image src={channel?.img} alt="Channel" />
             <ChannelDetail>
               <ChannelName>{channel?.name || "Nom de la chaîne"}</ChannelName>
               <ChannelCounter>{channel?.subscribers || 0} subscribers</ChannelCounter>
               <Description>{currentVideo?.desc || "Description de la vidéo"}</Description>
             </ChannelDetail>
           </ChannelInfo>
+          </Link>
           <Subscribe onClick={handleSub}>{isSubscribed
            ? "SUBSCRIBED"
            : "SUBSCRIBE"}

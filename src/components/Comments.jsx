@@ -57,7 +57,6 @@ const Comments = ({ videoId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [desc, setDesc] = useState('');
-  const [channel, setChannel] = useState({});
   useEffect(() => {
     const fetchComments = async () => {
       try {

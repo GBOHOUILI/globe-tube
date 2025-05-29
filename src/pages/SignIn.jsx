@@ -418,7 +418,7 @@ const SignIn = () => {
 
     dispatch(loginStart());
     try {
-      const res = await axios.post("/auth/signup", {
+      const res = await axios.post("/auth/register", {
         name: inputs.name,
         email: inputs.email,
         password: inputs.password,

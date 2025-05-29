@@ -90,7 +90,7 @@ const Card = ({ type, video }) => {
           <Link to={`/dashbord/${video.userId}` }style={{ textDecoration: "none" }}>
             <ChannelImage
             type={type}
-            src={channel?.img || "/default-avatar.jpg"}
+            src={channel?.img}
             />
           </Link>
 
