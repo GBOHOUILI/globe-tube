@@ -11,11 +11,14 @@ import Comments from "../components/Comments";
 import Recommendation from "../components/Recommendation";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { fetchFailure, fetchSuccess, fetchStart, like, dislike } from "../redux/videoSlice";
 import { subscription} from "../redux/userSlice";
 import { format } from "timeago.js";
+import { v4 as uuidv4 } from "uuid";
+
+
 
 // Thème violet (gardé identique)
 const theme = {
@@ -74,8 +77,8 @@ const VideoWrapper = styled.div`
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(75, 0, 130, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  min-height: 300px;
-  max-height: 4 00px;
+  min-height:150px;
+  max-height: 400px;
   
   &:hover {
     transform: translateY(-5px);
@@ -148,16 +151,6 @@ const Hr = styled.hr`
   background: linear-gradient(90deg, transparent, ${theme.secondaryColor}, transparent);
 `;
 
-// const Recommendation = styled.div`
-//   flex: 2;
-//   display: flex;
-//   flex-direction: column;
-//   gap: 20px;
-//   animation: ${fadeIn} 0.8s ease forwards;
-//   animation-delay: 0.5s;
-//   opacity: 0;
-// `;
-
 const Channel = styled.div`
   display: flex;
   justify-content: space-between;
@@ -183,7 +176,7 @@ const ChannelInfo = styled.div`
 const Image = styled.img`
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: 40%;
   object-fit: contain;
   border: 3px solid ${theme.primaryColor};
   box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
@@ -243,6 +236,29 @@ const Subscribe = styled.button`
     box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3);
   }
 `;
+const ViewWithFriends = styled.button`
+  background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.darkColor});
+  font-weight: 600;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  height: max-content;
+  padding: 12px 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, ${theme.darkColor}, ${theme.primaryColor});
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(138, 43, 226, 0.3);
+  }
+`;
 
 const IconPulse = styled.div`
   display: flex;
@@ -262,11 +278,6 @@ const CommentsSection = styled.div`
   opacity: 0;
 `;
 
-// const RecommendationTitle = styled.h3`
-//   color: ${theme.primaryColor};
-//   margin-bottom: 15px;
-//   font-weight: 600;
-// `;
 
 // Nouveaux styles pour gérer le chargement et les erreurs
 const LoadingContainer = styled.div`
@@ -307,9 +318,9 @@ const ErrorMessage = styled.div`
 `;
 
 const VideoFrame = styled.video`
-  max-height: 800px;
+  max-height: 410px;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
 
 `;
 
@@ -329,6 +340,7 @@ const Video = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mockVideos, setMockVideos] = useState([]);
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -367,6 +379,7 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
       try {
         const videoRes = await axios.get(`/videos/find/${path}`);
         dispatch(fetchSuccess(videoRes.data));
+              await axios.put(`/videos/view/${path}`);
 
         try {
           const channelRes = await axios.get(`/users/find/${videoRes?.data.userId}`);
@@ -423,9 +436,18 @@ const handleSub = async () => {
     dispatch(subscription(channel._id));
   } catch (error) {
     console.error("Erreur lors de l'abonnement :", error);
+  }  
+
+};
+
+  const handleView = async () => {
+ const videoId = currentVideo._id;
+  const roomId = uuidv4(); // identifiant unique pour la session watch party
+
+  // Naviguer vers l'URL en passant videoId et roomId en query params
+  navigate(`/watchparty/${roomId}?videoId=${videoId}`);
   }
   
-};
   return (
     <Container>
       <Content>
@@ -443,7 +465,7 @@ const handleSub = async () => {
                 Votre navigateur ne supporte pas la lecture vidéo.
               </VideoFrame>
             ) : (
-              <ImageFrame src={currentVideo.imgUrl || "/placeholder-thumbnail.jpg"} alt="Aperçu de la vidéo" />
+              <ImageFrame src={currentVideo.imgUrl || "/default-avatar.jpg"} alt="Aperçu de la vidéo" />
             )}
           </VideoWrapper>
 
@@ -455,6 +477,7 @@ const handleSub = async () => {
             {currentVideo?.views || 0} views • {currentVideo?.createdAt ? format(currentVideo.createdAt) : "récemment"}
           </Info>
           <Buttons>
+                    
             <Button onClick={handleLike}>
               {currentVideo.likes?.includes(currentUser._id) ? (
                 <ThumbUpIcon />
@@ -481,6 +504,7 @@ const handleSub = async () => {
               Save
             </Button>
           </Buttons>
+          <ViewWithFriends onClick={handleView}>View with Friends</ViewWithFriends>
         </Details>
 
         <Hr />

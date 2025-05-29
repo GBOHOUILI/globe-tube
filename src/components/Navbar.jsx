@@ -148,7 +148,7 @@ const ButtonsContainer = styled.div`
 const IconButton = styled.div`
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 40%;
   background-color: ${theme.lightColor};
   display: flex;
   align-items: center;
@@ -230,10 +230,11 @@ const User = styled.div`
 `
 
 const Avatar = styled.img`
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      border-radius: 25px;
       background-color: #999;
+      object-fit: cover;
 
 `
 const Navbar = () => {
@@ -241,8 +242,8 @@ const Navbar = () => {
   const [focused, setFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { currentUser } = useSelector(state => state.user)
-  const [q, setQ] = useState("")
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const [q, setQ] = useState("");
   
   useEffect(() => {
     const handleScroll = () => {
@@ -256,7 +257,6 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
   return (
     <>
 
@@ -291,9 +291,12 @@ const Navbar = () => {
                     <NotificationsNoneOutlinedIcon />
                   </IconButton>
                 </NotificationBadge>
+               <Link to={`/dashbord/${currentUser._id}` }style={{ textDecoration: "none" }}>
                 <IconButton>
-                <Avatar src={currentUser.img} />
+                  <Avatar src={currentUser.img} />
                 </IconButton>
+               </Link>
+
                 {currentUser.name}
               </User>
 

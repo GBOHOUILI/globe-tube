@@ -24,7 +24,7 @@ const Container = styled.div`
   opacity: 0;
 `;
 
-const Recommendation = ({tags}) => {
+const Recommendation2 = ({tags}) => {
     const [videos,setVideos] = useState([]);
 useEffect(() => {
   const fetchVideos = async () => {
@@ -43,9 +43,9 @@ useEffect(() => {
     return (
     <Container>
       {videos.map(video => (
-        <Card type="sm" key={video._id} video={video} />
+        <Card key={video._id} video={video} />
       ))}
     </Container>
     )
 }
-export default Recommendation
+export default Recommendation2

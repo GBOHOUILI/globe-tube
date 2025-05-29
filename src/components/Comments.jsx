@@ -25,6 +25,7 @@ const Avatar = styled.img`
   width: 50px;
   height: 50px;
   border-radius: 50%;
+  object-fit:cover;
 `;
 
 const Input = styled.input`
@@ -56,7 +57,7 @@ const Comments = ({ videoId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [desc, setDesc] = useState('');
-
+  const [channel, setChannel] = useState({});
   useEffect(() => {
     const fetchComments = async () => {
       try {

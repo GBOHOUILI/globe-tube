@@ -5,8 +5,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Video from "./pages/Video";
 import SignIn from "./pages/SignIn";
+import Error from "./pages/Error";
 import Search from "./pages/Search";
-import Dashbord from "./pages/Dashbord";
+import UserProfile from "./pages/Dashbord";
+import WatchParty from './pages/WatchParty';
 
 // Définition du thème violet
 const theme = {
@@ -119,9 +121,13 @@ const PageContainer = styled.div`
 function App() {
   return (
     <>
+    
       <GlobalStyle />
+
       <Container>
+
         <BrowserRouter>
+
           <Menu />
           <Main>
             <Navbar />
@@ -133,12 +139,16 @@ function App() {
                     <Route path="trends" element={<Home type="trend"/>} />
                     <Route path="subscriptions" element={<Home type="sub"/>} />
                     <Route path="search" element={<Search />} />
-                    <Route path="signin" element={<SignIn />} />
-                    <Route path="dashbord" element={<Dashbord />} />
+                    <Route path="signin" element={<SignIn />} />                   
+                    <Route path="watchparty/:roomId" element={<WatchParty />} />
+                    <Route path="dashbord/:userId" element={<UserProfile />} />
                     <Route path="videos">
-                      <Route path=":id" element={<Video />} />
+                    <Route path=":id" element={<Video />} />
+                    
+
                     </Route>
                   </Route>
+                  <Route path="*" element={<Error />} />
                 </Routes>
 
               </PageContainer>

@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import {format} from "timeago.js";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const Container = styled.div`
-  width: ${(props) => props.type !== "sm" && "360px"};
+  width: ${(props) => props.type !== "sm" && "300px"};
   margin-bottom: ${(props) => (props.type === "sm" ? "10px" : "45px")};
   cursor: pointer;
   display: ${(props) => props.type === "sm" && "flex"};
-  gap: 10px;
+  gap: 3px;
 `;
 
 const Image = styled.img`
@@ -17,6 +18,8 @@ const Image = styled.img`
   height: ${(props) => (props.type === "sm" ? "90px" : "202px")};
   background-color: #999;
   flex: 1;
+  object-fit: cover;
+    border-radius: 15px;
 `;
 
 const Details = styled.div`
@@ -27,11 +30,13 @@ const Details = styled.div`
 `;
 
 const ChannelImage = styled.img`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: 40%;
+  object-fit:cover;
   background-color: #999;
   display: ${(props) => props.type === "sm" && "none"};
+  
 `;
 
 const Texts = styled.div``;
@@ -54,6 +59,7 @@ const Info = styled.div`
 `;
 const Card = ({ type, video }) => {
   const [channel, setChannel] = useState(video.channel || null);
+  const currentUser = useSelector((state) => state.user.currentUser);
 
   useEffect(() => {
     // Si les données sont déjà là (vidéo fictive), pas besoin de fetch
@@ -72,17 +78,22 @@ const Card = ({ type, video }) => {
   }, [video]);
 
   return (
-    <Link to={`/videos/${video._id}`} style={{ textDecoration: "none" }}>
+   
       <Container type={type}>
+         <Link to={`/videos/${video._id}`} style={{ textDecoration: "none" }}>
         <Image
           type={type}
-          src={video.videoUrl}
+          src={video.imgUrl}
         />
+      </Link>
         <Details type={type}>
-          <ChannelImage
+          <Link to={`/dashbord/${video.userId}` }style={{ textDecoration: "none" }}>
+            <ChannelImage
             type={type}
             src={channel?.img || "/default-avatar.jpg"}
-          />
+            />
+          </Link>
+
           <Texts>
             <Title>{video.title}</Title>
             <ChannelName>{channel?.name || "Chaîne inconnue"}</ChannelName>
@@ -90,7 +101,7 @@ const Card = ({ type, video }) => {
           </Texts>
         </Details>
       </Container>
-    </Link>
+
   );
 };
 
