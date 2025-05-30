@@ -18,7 +18,7 @@ const theme = {
 let socketInstance = null;
 const getSocket = () => {
   if (!socketInstance) {
-    socketInstance = io('http://localhost:5000', {
+    socketInstance = io('https://bakend-globe-tube.onrender.com', {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       reconnection: true,

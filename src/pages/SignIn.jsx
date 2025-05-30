@@ -7,7 +7,6 @@ import { loginStart, loginSuccess, loginFailure } from "../redux/userSlice";
 import { auth, provider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-const url="https://bakend-globe-tube.onrender.com/api";
 
 // Thème violet dominant
 const theme = {
@@ -66,7 +65,7 @@ const Wrapper = styled.div`
   width: 70%;
   margin: 0 auto;
   border: 1px solid ${theme.secondaryColor}40;
-  padding: 0px 50px;
+  padding: 0px 50px 50px 50px;
   gap: 15px;
   box-shadow: 0 10px 40px rgba(138, 43, 226, 0.2);
   transition: all 0.3s ease;
@@ -390,7 +389,7 @@ const SignIn = () => {
 
     dispatch(loginStart());
     try {
-      const res = await axios.post(`${url}/auth/login`, {
+      const res = await axios.post("/auth/login", {
         email: inputs.email,
         password: inputs.password,
       });
@@ -416,10 +415,9 @@ const SignIn = () => {
       setGeneralError("Veuillez corriger les erreurs ci-dessus.");
       return;
     }
-
     dispatch(loginStart());
     try {
-      const res = await axios.post(`${url}/auth/register`, {
+      const res = await axios.post("/auth/register", {
         name: inputs.name,
         email: inputs.email,
         password: inputs.password,
@@ -436,7 +434,7 @@ const SignIn = () => {
     dispatch(loginStart());
     try {
       const result = await signInWithPopup(auth, provider);
-      const res = await axios.post(`${url}/auth/google`, {
+      const res = await axios.post("/auth/google", {
         name: result.user.displayName,
         email: result.user.email,
         img: result.user.photoURL,

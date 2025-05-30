@@ -4,7 +4,6 @@ import styled from "styled-components";
 import Comment from "./Comment";
 import axios from "axios";
 import SendIcon from "@mui/icons-material/Send";
-const url="https://bakend-globe-tube.onrender.com/api";
 
 
 const Container = styled.div``;
@@ -58,10 +57,11 @@ const Comments = ({ videoId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [desc, setDesc] = useState('');
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await axios.get(`${url}/comments/${videoId}`);
+        const res = await axios.get(`/comments/${videoId}`);
         setComments(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération des commentaires :", err);
@@ -75,7 +75,7 @@ const Comments = ({ videoId }) => {
     if (!desc.trim()) return;
 
     try {
-      const res = await axios.post(`${url}/comments`, {
+      const res = await axios.post(`/comments`, {
         videoId,
         desc,
       });
@@ -92,7 +92,7 @@ const Comments = ({ videoId }) => {
     <Container>
       <NewComment onSubmit={handleAddComment}>
         <Row>
-          <Avatar src={currentUser?.img} />
+          <Avatar src={currentUser?.img || "/default-avatar.png"} />
           <Input
             placeholder="Add a comment..."
             value={desc}
