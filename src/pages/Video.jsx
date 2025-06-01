@@ -332,6 +332,7 @@ const ImageFrame = styled.img`
   border-radius: 8px;
 `;
 
+
 const Video = () => {
   const dispatch = useDispatch();
   const path = useLocation().pathname.split("/")[2];
@@ -344,7 +345,6 @@ const Video = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const navigate = useNavigate();
 
-  // Simule des vidéos recommandées
   useEffect(() => {
     const dummyVideos = Array(8).fill().map((_, i) => ({
       _id: `dummy-${i}`,
@@ -369,7 +369,6 @@ const Video = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Récupération de la vidéo + chaîne
   useEffect(() => {
     const fetchData = async () => {
       dispatch(fetchStart());
@@ -398,13 +397,12 @@ const Video = () => {
     fetchData();
   }, [path, dispatch]);
 
-  // Actualisation isSubscribed quand channel/user changent
   useEffect(() => {
-    setIsSubscribed(currentUser?.subscribedUsers?.includes(channel._id));
-  }, [currentUser?.subscribedUsers, channel._id]);
+    setIsSubscribed(currentUser?.subscribedUsers?.includes(channel?._id));
+  }, [currentUser?.subscribedUsers, channel?._id]);
 
   const handleLike = async () => {
-    if (!currentUser || !currentVideo) return;
+    if (!currentUser || !currentVideo?._id) return;
     try {
       await axios.put(`${url}/users/like/${currentVideo._id}`, {}, {
         withCredentials: true,
@@ -416,7 +414,7 @@ const Video = () => {
   };
 
   const handleDislike = async () => {
-    if (!currentUser || !currentVideo) return;
+    if (!currentUser || !currentVideo?._id) return;
     try {
       await axios.put(`${url}/users/dislike/${currentVideo._id}`, {}, {
         withCredentials: true,
@@ -429,6 +427,8 @@ const Video = () => {
 
   const handleSub = async () => {
     try {
+      if (!channel?._id) return;
+
       if (isSubscribed) {
         await axios.put(`${url}/users/unsub/${channel._id}`, {}, { withCredentials: true });
       } else {
@@ -445,6 +445,7 @@ const Video = () => {
   };
 
   const handleView = () => {
+    if (!currentVideo?._id) return;
     const videoId = currentVideo._id;
     const roomId = uuidv4();
     navigate(`/watchparty/${roomId}?videoId=${videoId}`);
@@ -481,7 +482,7 @@ const Video = () => {
               Votre navigateur ne supporte pas la lecture vidéo.
             </VideoFrame>
           ) : (
-            <ImageFrame src={currentVideo.imgUrl} alt="Aperçu de la vidéo" />
+            <ImageFrame src={currentVideo?.imgUrl} alt="Aperçu de la vidéo" />
           )}
         </VideoWrapper>
 
@@ -493,12 +494,12 @@ const Video = () => {
           </Info>
           <Buttons>
             <Button onClick={handleLike}>
-              {currentVideo.likes?.includes(currentUser?._id) ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}{" "}
-              {currentVideo.likes?.length || 0}
+              {currentVideo?.likes?.includes(currentUser?._id) ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}{" "}
+              {currentVideo?.likes?.length || 0}
             </Button>
             <Button onClick={handleDislike}>
-              {currentVideo.dislikes?.includes(currentUser?._id) ? <ThumbDownIcon /> : <ThumbDownOffAltOutlinedIcon />}{" "}
-              {currentVideo.dislikes?.length || 0}
+              {currentVideo?.dislikes?.includes(currentUser?._id) ? <ThumbDownIcon /> : <ThumbDownOffAltOutlinedIcon />}{" "}
+              {currentVideo?.dislikes?.length || 0}
             </Button>
             <Button onClick={handleShare}>
               <IconPulse><ReplyOutlinedIcon /></IconPulse> Share
@@ -513,7 +514,7 @@ const Video = () => {
         <Hr />
 
         <Channel>
-          <Link to={`/dashbord/${channel._id}`} style={{ textDecoration: "none" }}>
+          <Link to={`/dashbord/${channel?._id}`} style={{ textDecoration: "none" }}>
             <ChannelInfo>
               <Image src={channel?.img} alt="Channel" />
               <ChannelDetail>
@@ -531,11 +532,11 @@ const Video = () => {
         <Hr />
 
         <CommentsSection>
-          <Comments videoId={currentVideo._id} />
+          {currentVideo?._id && <Comments videoId={currentVideo._id} />}
         </CommentsSection>
       </Content>
 
-      <Recommendation tags={currentVideo.tags} />
+      <Recommendation tags={currentVideo?.tags || []} />
     </Container>
   );
 };
