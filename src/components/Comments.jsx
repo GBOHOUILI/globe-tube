@@ -78,11 +78,11 @@ const Comments = ({ videoId }) => {
 
     try {
       const res = await axios.post(`${url}/comments`, {
-  withCredentials: true,
-}, {
         videoId,
         desc,
-      });
+      }{
+  withCredentials: true,
+}, );
 
       // Ajout immédiat du commentaire dans la liste
       setComments([res.data, ...comments]);
