@@ -8,7 +8,8 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Upload from "./UploadVideo";
 import { useNavigate } from "react-router-dom";
-// import { Avatar } from "@mui/material";
+const url = process.env.REACT_APP_API_URL;
+
 
 // Thème violet
 const theme = {

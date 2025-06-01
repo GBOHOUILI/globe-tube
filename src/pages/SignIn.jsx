@@ -7,6 +7,7 @@ import { loginStart, loginSuccess, loginFailure } from "../redux/userSlice";
 import { auth, provider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+const url = process.env.REACT_APP_API_URL;
 
 // Thème violet dominant
 const theme = {
@@ -389,7 +390,7 @@ const SignIn = () => {
 
     dispatch(loginStart());
     try {
-      const res = await axios.post("/auth/login", {
+      const res = await axios.post(`${url}/auth/login`, {
         email: inputs.email,
         password: inputs.password,
       });
@@ -417,7 +418,7 @@ const SignIn = () => {
     }
     dispatch(loginStart());
     try {
-      const res = await axios.post("/auth/register", {
+      const res = await axios.post(`${url}/auth/register`, {
         name: inputs.name,
         email: inputs.email,
         password: inputs.password,
@@ -434,7 +435,7 @@ const SignIn = () => {
     dispatch(loginStart());
     try {
       const result = await signInWithPopup(auth, provider);
-      const res = await axios.post("/auth/google", {
+      const res = await axios.post(`${url}/auth/google`, {
         name: result.user.displayName,
         email: result.user.email,
         img: result.user.photoURL,

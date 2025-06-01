@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import Card from "../components/Card";
 import styled, { keyframes } from "styled-components";
+const url = process.env.REACT_APP_API_URL;
 
 const fadeIn = keyframes`
   from {

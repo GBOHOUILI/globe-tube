@@ -4,7 +4,7 @@ import styled from "styled-components";
 import {format} from "timeago.js";
 import axios from "axios";
 import { useSelector } from "react-redux";
-
+const url = process.env.REACT_APP_API_URL;
 
 const Container = styled.div`
   width: ${(props) => props.type !== "sm" && "300px"};
@@ -67,7 +67,7 @@ const Card = ({ type, video }) => {
 
     const fetchChannel = async () => {
       try {
-        const res = await axios.get(`/users/find/${video.userId}`);
+        const res = await axios.get(`${url}/users/find/${video.userId}`);
         setChannel(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération de la chaîne :", err);
@@ -76,7 +76,6 @@ const Card = ({ type, video }) => {
 
     fetchChannel();
   }, [video]);
-
   return (
    
       <Container type={type}>

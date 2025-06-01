@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
-
+const url = process.env.REACT_APP_API_URL;
 const theme = {
   primaryColor: '#8A2BE2',
   secondaryColor: '#9370DB',

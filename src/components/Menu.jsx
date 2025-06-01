@@ -20,7 +20,7 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
-
+const url = process.env.REACT_APP_API_URL
 // Thème violet
 const theme = {
   primaryColor: "#8A2BE2",

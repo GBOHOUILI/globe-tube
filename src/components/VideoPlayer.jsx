@@ -4,7 +4,7 @@ import socket from '../socket';
 import axios from 'axios';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-
+const url = process.env.REACT_APP_API_URL;
 
 
 const PlayerWrapper = styled.div`
@@ -30,7 +30,7 @@ function VideoPlayer({ roomId }) {
     const videoId = query.get('videoId');
 
     if (videoId) {
-      axios.get(`/videos/find/${videoId}`)
+      axios.get(`${url}/videos/find/${videoId}`)
         .then(res => {
           setVideoUrl(res.data.videoUrl);
         })

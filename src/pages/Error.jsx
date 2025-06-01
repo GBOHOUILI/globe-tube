@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+const url = process.env.REACT_APP_API_URL;
 
 const glitch = keyframes`
   0% {

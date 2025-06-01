@@ -4,7 +4,7 @@ import styled from "styled-components";
 import Comment from "./Comment";
 import axios from "axios";
 import SendIcon from "@mui/icons-material/Send";
-
+const url = process.env.REACT_APP_API_URL
 
 const Container = styled.div``;
 
@@ -61,7 +61,7 @@ const Comments = ({ videoId }) => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await axios.get(`/comments/${videoId}`);
+        const res = await axios.get(`${url}/comments/${videoId}`);
         setComments(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération des commentaires :", err);
@@ -75,7 +75,7 @@ const Comments = ({ videoId }) => {
     if (!desc.trim()) return;
 
     try {
-      const res = await axios.post(`/comments`, {
+      const res = await axios.post(`${url}/comments`, {
         videoId,
         desc,
       });
