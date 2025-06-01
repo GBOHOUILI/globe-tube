@@ -341,25 +341,24 @@ const Video = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mockVideos, setMockVideos] = useState([]);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const navigate = useNavigate();
 
-
+  // Simule des vidéos recommandées
   useEffect(() => {
-    // Créer des vidéos fictives pour les recommandations
-const dummyVideos = Array(8).fill().map((_, i) => ({
-  _id: `dummy-${i}`,
-  title: `Vidéo recommandée ${i + 1}`,
-  videoUrl: '/placeholder-thumbnail.jpg',
-  views: Math.floor(Math.random() * 10000),
-  createdAt: new Date().toISOString(),
-  userId: `dummy-user-${i}`,
-  channel: {
-    name: `Chaîne Démo ${i + 1}`,
-    img: '',
-    subscribers: Math.floor(Math.random() * 10000),
-  },
-}));
-
+    const dummyVideos = Array(8).fill().map((_, i) => ({
+      _id: `dummy-${i}`,
+      title: `Vidéo recommandée ${i + 1}`,
+      videoUrl: '',
+      views: Math.floor(Math.random() * 10000),
+      createdAt: new Date().toISOString(),
+      userId: `dummy-user-${i}`,
+      channel: {
+        name: `Chaîne Démo ${i + 1}`,
+        img: '',
+        subscribers: Math.floor(Math.random() * 10000),
+      },
+    }));
     setMockVideos(dummyVideos);
   }, []);
 
@@ -370,27 +369,25 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Récupération des données vidéo et de l'utilisateur (chaîne)
+  // Récupération de la vidéo + chaîne
   useEffect(() => {
     const fetchData = async () => {
       dispatch(fetchStart());
       setLoading(true);
       setError(null);
-      
+
       try {
         const videoRes = await axios.get(`${url}/videos/find/${path}`);
         dispatch(fetchSuccess(videoRes.data));
-              await axios.put(`${url}/videos/view/${path}`);
+        await axios.put(`${url}/videos/view/${path}`);
 
         try {
-          const channelRes = await axios.get(`${url}/users/find/${videoRes?.data.userId}`);
+          const channelRes = await axios.get(`${url}/users/find/${videoRes.data.userId}`);
           setChannel(channelRes.data);
         } catch (channelErr) {
-          console.warn("Erreur lors de la récupération du canal:", channelErr);
-          // Continuer même si on ne peut pas récupérer les infos du canal
+          console.warn("Erreur canal:", channelErr);
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération de la vidéo:", err);
         dispatch(fetchFailure(err.message));
         setError("Impossible de charger la vidéo. Veuillez réessayer plus tard.");
       } finally {
@@ -401,92 +398,92 @@ const dummyVideos = Array(8).fill().map((_, i) => ({
     fetchData();
   }, [path, dispatch]);
 
+  // Actualisation isSubscribed quand channel/user changent
+  useEffect(() => {
+    setIsSubscribed(currentUser?.subscribedUsers?.includes(channel._id));
+  }, [currentUser?.subscribedUsers, channel._id]);
+
   const handleLike = async () => {
-   await axios.put(`${url}/users/like/${currentVideo._id}`);
-   dispatch(like(currentUser._id));
-  }
+    if (!currentUser || !currentVideo) return;
+    try {
+      await axios.put(`${url}/users/like/${currentVideo._id}`, {}, {
+        withCredentials: true,
+      });
+      dispatch(like(currentUser._id));
+    } catch (err) {
+      console.error("Erreur Like :", err);
+    }
+  };
 
   const handleDislike = async () => {
-   await axios.put(`${url}/users/dislike/${currentVideo._id}`);
-   dispatch(dislike(currentUser._id));
-  }
-
-const [isSubscribed, setIsSubscribed] = useState(currentUser.subscribedUsers?.includes(channel._id));
-
-useEffect(() => {
-  // Si currentUser ou channel changent, on met à jour isSubscribed
-  setIsSubscribed(currentUser.subscribedUsers?.includes(channel._id));
-}, [currentUser.subscribedUsers, channel._id]);
-
-const handleSub = async () => {
-  try {
-    if (isSubscribed) {
-      await axios.put(`${url}/users/unsub/${channel._id}`);
-    } else {
-      await axios.put(`${url}/users/sub/${channel._id}`);
+    if (!currentUser || !currentVideo) return;
+    try {
+      await axios.put(`${url}/users/dislike/${currentVideo._id}`, {}, {
+        withCredentials: true,
+      });
+      dispatch(dislike(currentUser._id));
+    } catch (err) {
+      console.error("Erreur Dislike :", err);
     }
+  };
 
-    // Change le state local tout de suite pour un effet instantané
-    setIsSubscribed(!isSubscribed);
+  const handleSub = async () => {
+    try {
+      if (isSubscribed) {
+        await axios.put(`${url}/users/unsub/${channel._id}`, {}, { withCredentials: true });
+      } else {
+        await axios.put(`${url}/users/sub/${channel._id}`, {}, { withCredentials: true });
+      }
 
-    // Récupérer les données mises à jour du channel
-    const channelRes = await axios.get(`${url}/users/find/${channel._id}`);
-    setChannel(channelRes.data);
+      setIsSubscribed(!isSubscribed);
+      const channelRes = await axios.get(`${url}/users/find/${channel._id}`);
+      setChannel(channelRes.data);
+      dispatch(subscription(channel._id));
+    } catch (error) {
+      console.error("Erreur abonnement :", error);
+    }
+  };
 
-    // Mettre à jour Redux pour currentUser (abonnements)
-    dispatch(subscription(channel._id));
-  } catch (error) {
-    console.error("Erreur lors de l'abonnement :", error);
-  }  
-
-};
-
-  const handleView = async () => {
- const videoId = currentVideo._id;
-  const roomId = uuidv4(); // identifiant unique pour la session watch party
-
-  // Naviguer vers l'URL en passant videoId et roomId en query params
-  navigate(`/watchparty/${roomId}?videoId=${videoId}`);
-  }
+  const handleView = () => {
+    const videoId = currentVideo._id;
+    const roomId = uuidv4();
+    navigate(`/watchparty/${roomId}?videoId=${videoId}`);
+  };
 
   const handleShare = () => {
-  if (navigator.share) {
-    navigator.share({
-      title: "Regarde cette vidéo sur GlobeTube",
-      text: "Viens voir cette vidéo !",
-      url: window.location.href,
-    })
-    .then(() => console.log("Partage réussi"))
-    .catch((error) => console.error("Erreur de partage :", error));
-  } else {
-    // Fallback : copier le lien
-    navigator.clipboard.writeText(window.location.href);
-    alert("Lien copié ! Partage-le manuellement");
-  }
-};
+    if (navigator.share) {
+      navigator.share({
+        title: "Regarde cette vidéo sur GlobeTube",
+        text: "Viens voir cette vidéo !",
+        url: window.location.href,
+      }).then(() => console.log("Partage réussi"))
+        .catch((error) => console.error("Erreur partage :", error));
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Lien copié ! Partage-le manuellement");
+    }
+  };
 
-  
   return (
     <Container>
       <Content>
         <VideoWrapper>
-            {loading ? (
-              <LoadingContainer>
-                <Spinner />
-                Chargement de la vidéo...
-              </LoadingContainer>
-            ) : error ? (
-              <ErrorMessage>{error}</ErrorMessage>
-            ) : currentVideo?.videoUrl ? (
-              <VideoFrame  controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()}>
-                <source src={currentVideo.videoUrl} type="video/mp4" />
-                Votre navigateur ne supporte pas la lecture vidéo.
-              </VideoFrame>
-            ) : (
-              <ImageFrame src={currentVideo.imgUrl} alt="Aperçu de la vidéo" />
-            )}
-          </VideoWrapper>
-
+          {loading ? (
+            <LoadingContainer>
+              <Spinner />
+              Chargement de la vidéo...
+            </LoadingContainer>
+          ) : error ? (
+            <ErrorMessage>{error}</ErrorMessage>
+          ) : currentVideo?.videoUrl ? (
+            <VideoFrame controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()}>
+              <source src={currentVideo.videoUrl} type="video/mp4" />
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </VideoFrame>
+          ) : (
+            <ImageFrame src={currentVideo.imgUrl} alt="Aperçu de la vidéo" />
+          )}
+        </VideoWrapper>
 
         <Title>{currentVideo?.title || "Titre de la vidéo"}</Title>
 
@@ -495,31 +492,19 @@ const handleSub = async () => {
             {currentVideo?.views || 0} views • {currentVideo?.createdAt ? format(currentVideo.createdAt) : "récemment"}
           </Info>
           <Buttons>
-                    
             <Button onClick={handleLike}>
-              {currentVideo.likes?.includes(currentUser._id) ? (
-                <ThumbUpIcon />
-              ) : (
-                <ThumbUpOutlinedIcon />
-              )}{" "}
-              {currentVideo?.likes?.length || 0}
+              {currentVideo.likes?.includes(currentUser?._id) ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}{" "}
+              {currentVideo.likes?.length || 0}
             </Button>
-
             <Button onClick={handleDislike}>
-              {currentVideo.dislikes?.includes(currentUser._id) ? (
-                <ThumbDownIcon />
-              ) : (
-                <ThumbDownOffAltOutlinedIcon />
-              )}{" "}
-              {currentVideo?.dislikes?.length || 0}
+              {currentVideo.dislikes?.includes(currentUser?._id) ? <ThumbDownIcon /> : <ThumbDownOffAltOutlinedIcon />}{" "}
+              {currentVideo.dislikes?.length || 0}
             </Button>
             <Button onClick={handleShare}>
-              <IconPulse><ReplyOutlinedIcon /></IconPulse>
-              Share
+              <IconPulse><ReplyOutlinedIcon /></IconPulse> Share
             </Button>
             <Button>
-              <IconPulse><AddTaskOutlinedIcon /></IconPulse>
-              Save
+              <IconPulse><AddTaskOutlinedIcon /></IconPulse> Save
             </Button>
           </Buttons>
           <ViewWithFriends onClick={handleView}>View with Friends</ViewWithFriends>
@@ -528,19 +513,18 @@ const handleSub = async () => {
         <Hr />
 
         <Channel>
-          <Link to={`/dashbord/${channel._id}` }style={{ textDecoration: "none" }}>
-          <ChannelInfo>
-            <Image src={channel?.img} alt="Channel" />
-            <ChannelDetail>
-              <ChannelName>{channel?.name || "Nom de la chaîne"}</ChannelName>
-              <ChannelCounter>{channel?.subscribers || 0} subscribers</ChannelCounter>
-              <Description>{currentVideo?.desc || "Description de la vidéo"}</Description>
-            </ChannelDetail>
-          </ChannelInfo>
+          <Link to={`/dashbord/${channel._id}`} style={{ textDecoration: "none" }}>
+            <ChannelInfo>
+              <Image src={channel?.img} alt="Channel" />
+              <ChannelDetail>
+                <ChannelName>{channel?.name || "Nom de la chaîne"}</ChannelName>
+                <ChannelCounter>{channel?.subscribers || 0} subscribers</ChannelCounter>
+                <Description>{currentVideo?.desc || "Description de la vidéo"}</Description>
+              </ChannelDetail>
+            </ChannelInfo>
           </Link>
-          <Subscribe onClick={handleSub}>{isSubscribed
-           ? "SUBSCRIBED"
-           : "SUBSCRIBE"}
+          <Subscribe onClick={handleSub}>
+            {isSubscribed ? "SUBSCRIBED" : "SUBSCRIBE"}
           </Subscribe>
         </Channel>
 
@@ -551,10 +535,11 @@ const handleSub = async () => {
         </CommentsSection>
       </Content>
 
-      <Recommendation tags={currentVideo.tags}/>
-
+      <Recommendation tags={currentVideo.tags} />
     </Container>
   );
 };
+
+
 
 export default Video;

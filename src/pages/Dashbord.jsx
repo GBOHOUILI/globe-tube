@@ -482,7 +482,9 @@ function UserProfile() {
         updateData.password = formData.password;
       }
 
-      const res = await axios.put(`${url}/users/${userId}`, updateData);
+      const res = await axios.put(`${url}/users/${userId}`, updateData, {
+        withCredentials: true,
+      });
       setUser(res.data);
       setIsEditing(false);
       setImageFile(null);

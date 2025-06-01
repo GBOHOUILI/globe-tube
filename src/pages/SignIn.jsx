@@ -393,14 +393,17 @@ const SignIn = () => {
       const res = await axios.post(`${url}/auth/login`, {
         email: inputs.email,
         password: inputs.password,
+      }, {
+        withCredentials: true,
       });
-      dispatch(loginSuccess(res.data));
+      dispatch(loginSuccess(res.data.user));
       navigate("/");
     } catch (err) {
       dispatch(loginFailure());
       setGeneralError(err.response?.data?.message || "Échec de la connexion. Veuillez réessayer.");
     }
   };
+
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -422,8 +425,10 @@ const SignIn = () => {
         name: inputs.name,
         email: inputs.email,
         password: inputs.password,
-      });
-      dispatch(loginSuccess(res.data));
+      }, {
+  withCredentials: true,
+});
+      dispatch(loginSuccess(res.data.user));
       navigate("/");
     } catch (err) {
       dispatch(loginFailure());
@@ -439,8 +444,10 @@ const SignIn = () => {
         name: result.user.displayName,
         email: result.user.email,
         img: result.user.photoURL,
-      });
-      dispatch(loginSuccess(res.data));
+      }, {
+  withCredentials: true,
+});
+      dispatch(loginSuccess(res.data.user));
       navigate("/");
     } catch (error) {
       dispatch(loginFailure());

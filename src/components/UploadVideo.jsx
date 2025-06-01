@@ -550,6 +550,8 @@ const UploadVideo = ({ setOpen }) => {
     try {
   
       const response = await axios.post(`${url}/videos`, videoData, {
+  withCredentials: true,
+}, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total

@@ -61,7 +61,9 @@ const Comments = ({ videoId }) => {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const res = await axios.get(`${url}/comments/${videoId}`);
+        const res = await axios.get(`${url}/comments/${videoId}`, {
+  withCredentials: true,
+});
         setComments(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération des commentaires :", err);
@@ -76,6 +78,8 @@ const Comments = ({ videoId }) => {
 
     try {
       const res = await axios.post(`${url}/comments`, {
+  withCredentials: true,
+}, {
         videoId,
         desc,
       });
@@ -92,7 +96,7 @@ const Comments = ({ videoId }) => {
     <Container>
       <NewComment onSubmit={handleAddComment}>
         <Row>
-          <Avatar src={currentUser?.img || "/default-avatar.png"} />
+          <Avatar src={currentUser?.img } />
           <Input
             placeholder="Add a comment..."
             value={desc}

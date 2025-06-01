@@ -30,7 +30,9 @@ function VideoPlayer({ roomId }) {
     const videoId = query.get('videoId');
 
     if (videoId) {
-      axios.get(`${url}/videos/find/${videoId}`)
+      axios.get(`${url}/videos/find/${videoId}`, {
+  withCredentials: true,
+})
         .then(res => {
           setVideoUrl(res.data.videoUrl);
         })

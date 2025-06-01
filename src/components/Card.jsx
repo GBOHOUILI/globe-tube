@@ -67,7 +67,9 @@ const Card = ({ type, video }) => {
 
     const fetchChannel = async () => {
       try {
-        const res = await axios.get(`${url}/users/find/${video.userId}`);
+        const res = await axios.get(`${url}/users/find/${video.userId}`, {
+  withCredentials: true,
+});
         setChannel(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération de la chaîne :", err);

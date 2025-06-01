@@ -245,7 +245,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const currentUser = useSelector((state) => state.user.currentUser);
   const [q, setQ] = useState("");
-  
+  console.log(currentUser)
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {

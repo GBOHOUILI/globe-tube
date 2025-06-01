@@ -31,7 +31,9 @@ useEffect(() => {
   const fetchVideos = async () => {
     if (!tags || tags.length === 0) return;
     try {
-      const res = await axios.get(`${url}/videos/tags?tags=${tags.join(",")}`);
+      const res = await axios.get(`${url}/videos/tags?tags=${tags.join(",")}`, {
+  withCredentials: true,
+});
       setVideos(res.data);
     } catch (err) {
       console.error("Erreur lors de la récupération des vidéos :", err);
