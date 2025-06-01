@@ -80,7 +80,7 @@ const Comments = ({ videoId }) => {
       const res = await axios.post(`${url}/comments`, {
         videoId,
         desc,
-      }{
+      },{
   withCredentials: true,
 }, );
 
