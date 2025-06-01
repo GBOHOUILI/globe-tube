@@ -97,10 +97,11 @@ const InviteButton = styled.button`
 `;
 
 function InviteModal() {
-  const [roomId] = useState(() => {
-    const url = window.location.href;
-    return url.split('/').pop(); // Get room ID from URL
-  });
+ const [roomId] = useState(() => {
+  const pathParts = window.location.pathname.split('/');
+  return pathParts[pathParts.length - 1];
+});
+
 
   const inviteLink = `${window.location.origin}/watchparty/${roomId}`;
   const [isCopied, setIsCopied] = useState(false);
