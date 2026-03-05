@@ -1,647 +1,758 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import axios from 'axios';
-import { useParams, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import Card from '../components/Card';
-const url = process.env.REACT_APP_API_URL;
+import React, { useEffect, useState } from "react";
+import styled, { keyframes } from "styled-components";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import Card from "../components/Card";
 
-const theme = {
-  primaryColor: '#8A2BE2',
-  secondaryColor: '#9370DB',
-  accentColor: '#BA55D3',
-  lightColor: '#E6E6FA',
-  darkColor: '#4B0082',
-  textColor: '#2E0854',
-  errorColor: '#d32f2f',
-};
+// ── Import du ThemeContext ──
+import { useTheme } from "../context/ThemeContext";
 
-// Styled components
-const ProfileContainer = styled.div`
+const API_URL = process.env.REACT_APP_API_URL;
+
+// ─── Animations ────────────────────────────────────────────────────────────
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const shimmer = keyframes`
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
+// ─── Styled Components avec thème dynamique ────────────────────────────────
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background: ${({ $isDark }) => $isDark ? "#0a0a12" : "#f8fafc"};
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#1e293b"};
   position: relative;
-  padding: 0;
-  width: 90%;
-  margin: 20px auto;
-  background: linear-gradient(135deg, ${theme.lightColor} 0%, #ffffff 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.1);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+`;
 
+const HeroSection = styled.div`
+  position: relative;
+  z-index: 1;
+`;
+
+const CoverBand = styled.div`
+  height: 300px;
+  background: ${({ $isDark }) => $isDark 
+    ? 'linear-gradient(135deg, #4c1d95 0%, #1e293b 50%, #0f1117 100%)' 
+    : 'linear-gradient(135deg, #6d28d9 0%, #d5d2d8 50%, #ffffff 100%)'};
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px 0 0;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 20% 50%, rgba(109,40,217,0.4) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 80% 30%, rgba(245,158,11,0.12) 0%, transparent 60%);
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+  }
+  @media (max-width: 768px) { height: 220px; }
+`;
+
+const ProfileRow = styled.div`
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-top: -80px;
   @media (max-width: 768px) {
-    margin: 10px;
-    padding: 16px;
+    padding: 0 20px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -60px;
   }
 `;
 
-const ProfileHeader = styled.div`
-padding:20px;
+const AvatarWrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
+`;
+
+const Avatar = styled.img`
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 4px solid ${({ $isDark }) => $isDark ? "rgba(139,92,246,0.6)" : "rgba(139,92,246,0.5)"};
+  object-fit: cover;
+  background: ${({ $isDark }) => $isDark ? "#1e2535" : "#6d28d9"};
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  position: relative;
+  z-index: 1;
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: ${({ $isDark }) => $isDark 
+      ? "0 0 0 10px rgba(109,40,217,0.3), 0 30px 60px rgba(0,0,0,0.7)" 
+      : "0 0 0 10px rgba(109,40,217,0.2), 0 30px 60px rgba(0,0,0,0.6)"};
+  }
+  @media (max-width: 768px) {
+    width: 120px;
+    height: 120px;
+  }
+`;
+
+const UserInfoBlock = styled.div`
+  flex: 1;
+  padding-top: 0;
+`;
+
+const TopRow = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  @media (max-width: 768px) { justify-content: center; }
 `;
 
-const ProfilePicture = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 40%;
-  object-fit: cover;
-  border: 3px solid ${theme.primaryColor};
-  background: ${theme.lightColor};
-
-  @media (max-width: 768px) {
-    width: 60px;
-    height: 60px;
-  }
-`;
-
-const ProfileInfo = styled.div`
-  flex: 1;
-`;
-
-const Username = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: ${theme.textColor};
-  margin: 0 0 8px;
-`;
-
-const Email = styled.p`
-  font-size: 0.95rem;
-  color: ${theme.textColor}80;
-  margin: 0 0 8px;
-`;
-
-const Description = styled.div`
-  font-size: 0.95rem;
-  color: ${theme.textColor};
-  background: ${theme.lightColor}40;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid ${theme.primaryColor}20;
-  box-shadow: 0 2px 6px rgba(138, 43, 226, 0.1);
-  line-height: 1.4;
-  max-height: 120px;
-  overflow-y: auto;
-  margin: 0 0 12px;
-
-  @media (max-width: 768px) {
-    padding: 10px 12px;
-    font-size: 0.9rem;
-  }
-`;
-
-const Stats = styled.div`
-  display: flex;
-  gap: 16px;
-`;
-
-const Stat = styled.p`
-  font-size: 0.9rem;
-  color: ${theme.textColor}80;
+const UserName = styled.h1`
+  font-family: 'Syne', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#1e293b"};
   margin: 0;
-
-  span {
-    font-weight: 600;
-    color: ${theme.textColor};
-  }
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  @media (max-width: 768px) { font-size: 1.9rem; }
 `;
 
-const ActionButtons = styled.div`
+const UserEmail = styled.div`
+  font-size: 0.97rem;
+  color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#64748b"};
+  margin: 12px 0 16px;
+  letter-spacing: 0.02em;
+`;
+
+const StatsRow = styled.div`
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  @media (max-width: 768px) { justify-content: center; }
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+`;
+
+const StatNumber = styled.span`
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ $isDark }) => $isDark ? "#c084fc" : "#6d28d9"};
+  line-height: 2;
+`;
+
+const StatLabel = styled.span`
+  font-size: 0.8rem;
+  color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#64748b"};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+`;
+
+const Divider = styled.div`
+  width: 1px;
+  height: 40px;
+  background: ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
+  align-self: center;
+`;
+
+const DescriptionSection = styled.div`
+  max-width: 1200px;
+  margin: 28px auto 0;
+  padding: 0 40px;
+  animation: ${fadeUp} 0.5s ease both;
+  animation-delay: 0.2s;
+  @media (max-width: 768px) { padding: 0 20px; }
+`;
+
+const DescriptionCard = styled.div`
+  background: ${({ $isDark }) => $isDark ? "#1e2535" : "rgba(139,92,246,0.04)"};
+  border: 1px solid ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
+  border-radius: 16px;
+  padding: 20px 24px;
+  color: ${({ $isDark }) => $isDark ? "#cbd5e1" : "#475569"};
+  font-size: 0.97rem;
+  line-height: 1.7;
+`;
+
+const ActionGroup = styled.div`
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  align-items: center;
+  flex-shrink: 0;
 `;
 
-const EditButton = styled.button`
-  background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor});
-  color: white;
-  margin-left:120px;
-  padding: 8px 16px;
+const Btn = styled.button`
+  padding: 10px 22px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  border-radius: 999px;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  &:hover { transform: translateY(-2px); }
+  &:active { transform: translateY(0); }
+`;
 
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg, ${theme.darkColor}, ${theme.primaryColor});
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(138, 43, 226, 0.4);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    box-shadow: 0 2px 6px rgba(138, 43, 226, 0.2);
+const EditBtn = styled(Btn)`
+  background: ${({ $isDark }) => $isDark ? "#252f3d" : "white"};
+  color: ${({ $isDark }) => $isDark ? "#c084fc" : "#8b5cf6"};
+  border: 1px solid ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
+  &:hover {
+    background: ${({ $isDark }) => $isDark ? "rgba(139,92,246,0.2)" : "rgba(139,92,246,0.22)"};
+    border-color: ${({ $isDark }) => $isDark ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.5)"};
   }
 `;
 
-const SubscribeButton = styled(EditButton)`
-  background: ${props =>
-    props.isSubscribed
-      ? 'linear-gradient(135deg, #808080, #a9a9a9)'
-      : `linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor})`};
-
-  &:hover:not(:disabled) {
-    background: ${props =>
-      props.isSubscribed
-        ? 'linear-gradient(135deg, #696969, #808080)'
-        : `linear-gradient(135deg, ${theme.darkColor}, ${theme.primaryColor})`};
+const SubscribeBtn = styled(Btn)`
+  background: ${({ $subscribed, $isDark }) => 
+    $subscribed 
+      ? $isDark ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.1)" 
+      : "#8A2BE2"};
+  color: ${({ $subscribed, $isDark }) => 
+    $subscribed 
+      ? $isDark ? "#94a3b8" : "#64748b" 
+      : "white"};
+  border: ${({ $subscribed, $isDark }) => 
+    $subscribed 
+      ? `1px solid ${$isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"}` 
+      : "none"};
+  &:hover {
+    background: ${({ $subscribed, $isDark }) => 
+      $subscribed 
+        ? $isDark ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.18)" 
+        : "#7c3aed"};
   }
 `;
 
-const VideosSection = styled.section`
-  box-shadow: 0 6px 6px rgba(138, 43, 226, 0.1);
-  height:100%;
+const ContentArea = styled.main`
+  max-width: 1200px;
+  margin: 48px auto 0;
+  padding: 0 40px 60px;
+  position: relative;
+  z-index: 1;
+  animation: ${fadeUp} 0.5s ease both;
+  animation-delay: 0.3s;
+  @media (max-width: 768px) { padding: 0 20px 40px; }
+`;
+
+const SectionHeading = styled.h2`
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#6d28d9"};
+  margin: 0 0 28px;
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 20px 60px;
-  margin-top: 24px;
-  border-radius: 20px;
-  border: 2px solid ${theme.primaryColor}10;
-  @media (max-width: 768px) {
-    padding: 12px;
+  align-items: center;
+  gap: 12px;
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
   }
-`;
-
-const VideosTitle = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: ${theme.textColor};
-  margin: 16px;
 `;
 
 const VideosGrid = styled.div`
-width:100%;
-    display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 0 50px;
-`;
-
-
-const VideoCardWrapper = styled.div`
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background-color:none;
-
-  &:hover {
-    transform: translateY(-4px);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
   }
 `;
 
-const NoVideosMessage = styled.div`
+const VideoCardWrap = styled.div`
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+  &:hover { transform: translateY(-4px); }
+`;
+
+const EmptyState = styled.div`
   text-align: center;
-  font-size: 0.95rem;
-  color: ${theme.textColor}80;
-  padding: 20px;
-  background: ${theme.lightColor}40;
-  border-radius: 8px;
+  padding: 80px 30px;
+  color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#64748b"};
+  font-size: 1.05rem;
+  background: ${({ $isDark }) => $isDark ? "rgba(139,92,246,0.08)" : "rgba(139,92,246,0.04)"};
+  border-radius: 24px;
+  border: 1px dashed ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
 `;
 
-const EditForm = styled.form`
+const ErrorBox = styled.div`
+  background: ${({ $isDark }) => $isDark ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)"};
+  color: #fca5a5;
+  padding: 14px 20px;
+  border-radius: 12px;
+  margin: 20px auto;
+  max-width: 1200px;
+  border-left: 3px solid #ef4444;
+  font-weight: 500;
+  font-size: 0.93rem;
+  position: relative;
+  z-index: 2;
+  padding-left: 40px;
+  padding-right: 40px;
+`;
+
+const SkeletonBase = styled.div`
+  background: linear-gradient(90deg,
+    ${({ $isDark }) => $isDark ? "rgba(30,37,53,0.6)" : "rgba(255,255,255,0.04)"} 25%,
+    ${({ $isDark }) => $isDark ? "rgba(45,55,72,0.8)" : "rgba(255,255,255,0.08)"} 50%,
+    ${({ $isDark }) => $isDark ? "rgba(30,37,53,0.6)" : "rgba(255,255,255,0.04)"} 75%
+  );
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.8s infinite;
+  border-radius: 16px;
+`;
+
+// Modal
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
 `;
 
-const FormInput = styled.input`
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 2px solid ${theme.lightColor}60;
-  background: #fff;
-  font-size: 0.95rem;
-  color: ${theme.textColor};
-  font-family: inherit;
-  transition: all 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${theme.accentColor};
-    box-shadow: 0 0 0 3px ${theme.accentColor}20;
-  }
+const Modal = styled.div`
+  background: ${({ $isDark }) => $isDark ? "#1a1030" : "#ffffff"};
+  border: 1px solid ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
+  border-radius: 24px;
+  width: 100%;
+  max-width: 500px;
+  padding: 36px;
+  box-shadow: ${({ $isDark }) => $isDark 
+    ? "0 0 40px rgba(109,40,217,0.45), 0 20px 60px rgba(0,0,0,0.7)" 
+    : "0 0 40px rgba(109,40,217,0.35), 0 20px 60px rgba(0,0,0,0.5)"};
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: ${fadeUp} 0.3s ease;
 `;
 
-const FormTextarea = styled.textarea`
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 2px solid ${theme.lightColor}60;
-  background: #fff;
-  font-size: 0.95rem;
-  color: ${theme.textColor};
-  font-family: inherit;
-  resize: vertical;
-  min-height: 80px;
-  transition: all 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${theme.accentColor};
-    box-shadow: 0 0 0 3px ${theme.accentColor}20;
-  }
+const ModalTitle = styled.h2`
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#1e293b"};
+  margin: 0 0 28px;
 `;
 
-const FormFileInput = styled.input`
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid ${theme.lightColor}60;
-  background: #fff;
-  font-size: 0.95rem;
-  color: ${theme.textColor};
-  font-family: inherit;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-    border-color: ${theme.accentColor};
-    box-shadow: 0 0 0 3px ${theme.accentColor}20;
-  }
-
-  &::file-selector-button {
-    background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor});
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
+const FieldWrap = styled.div`
+  margin-bottom: 20px;
+  label {
+    display: block;
+    font-size: 0.82rem;
     font-weight: 600;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: linear-gradient(135deg, ${theme.darkColor}, ${theme.primaryColor});
+    color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#475569"};
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.25)"};
+    background: ${({ $isDark }) => $isDark ? "#252f3d" : "rgba(139,92,246,0.06)"};
+    color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#1e293b"};
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    &:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px ${({ $isDark }) => $isDark ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.15)"};
     }
+    &::placeholder { color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#94a3b8"}; opacity: 0.6; }
+  }
+  textarea { resize: vertical; }
+  input[type="file"] {
+    padding: 10px 16px;
+    cursor: pointer;
+    color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#475569"};
   }
 `;
 
-const FormButtons = styled.div`
+const ModalActions = styled.div`
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  margin-top: 8px;
 `;
 
-const CancelButton = styled(EditButton)`
-  background: linear-gradient(135deg, #ffffff, ${theme.lightColor});
-  color: ${theme.textColor};
-  border: 1px solid ${theme.lightColor}60;
-
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg, ${theme.lightColor}, #ffffff);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-  }
+const CancelBtn = styled.button`
+  background: ${({ $isDark }) => $isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.06)"};
+  color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#475569"};
+  border: 1px solid ${({ $isDark }) => $isDark ? "rgba(148,163,184,0.3)" : "rgba(139,92,246,0.3)"};
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 500;
+  &:hover { background: ${({ $isDark }) => $isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.1)"}; }
 `;
 
-const ErrorMessage = styled.div`
-  background: linear-gradient(135deg, #ffebee, #ffcdd2);
-  color: ${theme.errorColor};
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  text-align: center;
-  border-left: 4px solid ${theme.errorColor};
+const SaveBtn = styled.button`
+  background: #8A2BE2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 500;
+  &:hover { background: #7c3aed; }
 `;
 
-const LoadingMessage = styled.div`
-  text-align: center;
-  font-size: 1rem;
-  color: ${theme.textColor};
-  padding: 20px;
-  background: ${theme.lightColor}20;
-  border-radius: 8px;
-`;
-
+// ─── Composant UserProfile ─────────────────────────────────────────────────
 function UserProfile() {
   const { userId } = useParams();
   const currentUser = useSelector(state => state.user.currentUser);
   const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    description: '',
-    img: '',
-    password: '',
-    passwordConfirm: '',
+  const [videos, setVideos] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    name: '', email: '', description: '', img: '',
+    password: '', passwordConfirm: '',
   });
   const [imageFile, setImageFile] = useState(null);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [videos, setVideos] = useState([]);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [videosLoading, setVideosLoading] = useState(true);
-  const [videosError, setVideosError] = useState(null);
 
-  const isOwnProfile = currentUser && userId === currentUser._id;
+  const { isDark } = useTheme();
+
+  const isOwnProfile = currentUser?._id === userId;
   const isSubscribed = user?.subscribedUsers?.includes(currentUser?._id);
 
-  // Fetch user data
   useEffect(() => {
-    setIsLoading(true);
-    axios
-      .get(`${url}/users/find/${userId}`)
-      .then(res => {
-        setUser(res.data);
-        setFormData({
-          name: res.data.name || '',
-          email: res.data.email || '',
-          description: res.data.description || '',
-          img: res.data.img || '',
+    const loadProfile = async () => {
+      setLoading(true);
+      try {
+        const [userRes, videosRes] = await Promise.all([
+          axios.get(`${API_URL}/users/find/${userId}`),
+          axios.get(`${API_URL}/videos/user/${userId}`)
+        ]);
+        setUser(userRes.data);
+        setVideos(videosRes.data || []);
+        setForm({
+          name: userRes.data.name || '',
+          email: userRes.data.email || '',
+          description: userRes.data.description || '',
+          img: userRes.data.img || '',
           password: '',
           passwordConfirm: '',
         });
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error('Erreur chargement profil:', err);
-        setError('Impossible de charger le profil. Veuillez réessayer.');
-        setIsLoading(false);
-      });
-  }, [userId]);
-
-  // Fetch videos
-  useEffect(() => {
-    const fetchVideos = async () => {
-      setVideosLoading(true);
-      setVideosError(null);
-      try {
-        const res = await axios.get(`${url}/videos/user/${userId}`);
-        setVideos(res.data || []);
-        setVideosLoading(false);
       } catch (err) {
-        console.error('Erreur chargement vidéos:', err);
-        setVideosError('Impossible de charger les vidéos. Veuillez réessayer.');
+        console.error(err);
+        setErrorMsg("Impossible de charger le profil ou les vidéos.");
+      } finally {
+        setLoading(false);
         setVideosLoading(false);
       }
     };
-    fetchVideos();
+    loadProfile();
   }, [userId]);
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    setError(null);
-    setImageFile(null);
-    setFormData(prev => ({ ...prev, password: '', passwordConfirm: '' }));
-  };
-
-  const handleInputChange = e => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = e => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-        setError('Veuillez sélectionner une image (JPEG, PNG, GIF).');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setError('L\'image doit être inférieure à 5 Mo.');
-        return;
-      }
-      setImageFile(file);
-      setError(null);
-    }
-  };
-
-  const handleSubscribeToggle = async () => {
+  const toggleSubscribe = async () => {
     try {
-      const endpoint = isSubscribed ? `${url}/users/unsub/${userId}` : `${url}/users/sub/${userId}`;
-      const res = await axios.put(endpoint);
+      const action = isSubscribed ? 'unsub' : 'sub';
+      const res = await axios.put(`${API_URL}/users/${action}/${userId}`);
       setUser(res.data);
     } catch (err) {
-      console.error('Erreur abonnement:', err);
-      setError(`Échec de ${isSubscribed ? 'la désinscription' : 'l\'abonnement'}. Veuillez réessayer.`);
+      setErrorMsg(`Échec ${isSubscribed ? 'désabonnement' : 'abonnement'}.`);
     }
   };
 
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      return 'Le nom d\'utilisateur est requis.';
-    }
-    if (!formData.email.trim()) {
-      return 'L\'adresse e-mail est requise.';
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      return 'Veuillez entrer une adresse e-mail valide.';
-    }
-    if (formData.password || formData.passwordConfirm) {
-      if (formData.password !== formData.passwordConfirm) {
-        return 'Les mots de passe ne correspondent pas.';
-      }
-      if (formData.password.length < 6) {
-        return 'Le mot de passe doit contenir au moins 6 caractères.';
-      }
-    }
-    return null;
+  const handleImageChange = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return setErrorMsg('Seules les images sont acceptées.');
+    if (file.size > 5 * 1024 * 1024) return setErrorMsg('Image trop lourde (max 5 Mo).');
+    setImageFile(file);
+    setErrorMsg(null);
   };
 
-  const handleSubmit = async e => {
+  const handleUpdateProfile = async e => {
     e.preventDefault();
-    setError(null);
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
+    setErrorMsg(null);
+    if (!form.name.trim()) return setErrorMsg("Le nom est requis.");
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) return setErrorMsg("Email invalide.");
+    if (form.password && form.password !== form.passwordConfirm) return setErrorMsg("Les mots de passe ne correspondent pas.");
     try {
-      let updatedImg = formData.img;
-
-      // Upload image to Cloudinary if a new file is selected
-      if (imageFile) {
-        const uploadData = new FormData();
-        uploadData.append('file', imageFile);
-        uploadData.append('upload_preset', 'gbobe_tube');
-        const cloudName = 'duptzhpjl';
-        const uploadRes = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          uploadData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
-        updatedImg = uploadRes.data.secure_url;
-      }
-
-      // Update profile
-      const updateData = {
-        name: formData.name,
-        email: formData.email,
-        description: formData.description,
-        img: updatedImg,
-      };
-      if (formData.password) {
-        updateData.password = formData.password;
-      }
-
-      const res = await axios.put(`${url}/users/${userId}`, updateData, {
+      const data = new FormData();
+      data.append('name', form.name);
+      data.append('email', form.email);
+      data.append('description', form.description);
+      if (form.password) data.append('password', form.password);
+      if (imageFile) data.append('img', imageFile);
+      const res = await axios.put(`${API_URL}/users/${userId}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
       setUser(res.data);
-      setIsEditing(false);
+      setEditing(false);
       setImageFile(null);
-      setFormData(prev => ({ ...prev, password: '', passwordConfirm: '' }));
+      setForm(prev => ({ ...prev, password: '', passwordConfirm: '' }));
     } catch (err) {
-      console.error('Erreur mise à jour profil:', err);
-      setError('Échec de la mise à jour du profil. Veuillez réessayer.');
+      setErrorMsg("Échec de la mise à jour du profil.");
     }
   };
 
-  if (!currentUser) {
-    return <Navigate to="/signin" />;
-  }
+  const deleteVideo = async (videoId) => {
+    if (!window.confirm("Confirmer la suppression ?")) return;
+    try {
+      await axios.delete(`${API_URL}/videos/${videoId}`, { withCredentials: true });
+      setVideos(prev => prev.filter(v => v._id !== videoId));
+    } catch (err) {
+      setErrorMsg("Impossible de supprimer la vidéo.");
+    }
+  };
 
-  if (isLoading) {
+  // ─── Loading skeleton ──────────────────────────────────────────────────────
+  if (loading) {
     return (
-      <ProfileContainer>
-        <LoadingMessage>Chargement du profil...</LoadingMessage>
-      </ProfileContainer>
+      <PageContainer $isDark={isDark}>
+        <CoverBand $isDark={isDark} />
+        <ProfileRow>
+          <SkeletonBase style={{ width: 160, height: 160, borderRadius: '50%', marginTop: -80, flexShrink: 0 }} />
+          <div style={{ flex: 1, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <SkeletonBase style={{ height: 40, width: '45%' }} />
+            <SkeletonBase style={{ height: 20, width: '30%' }} />
+            <SkeletonBase style={{ height: 20, width: '25%' }} />
+          </div>
+        </ProfileRow>
+        <ContentArea>
+          <SectionHeading $isDark={isDark}>Vidéos</SectionHeading>
+          <VideosGrid>
+            {Array(6).fill(null).map((_, i) => (
+              <SkeletonBase key={i} style={{ height: 220 }} />
+            ))}
+          </VideosGrid>
+        </ContentArea>
+      </PageContainer>
     );
   }
 
   if (!user) {
     return (
-      <ProfileContainer>
-        <ErrorMessage>Profil non trouvé.</ErrorMessage>
-      </ProfileContainer>
+      <PageContainer $isDark={isDark} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <h2 style={{ color: isDark ? "#94a3b8" : "#64748b", fontFamily: 'Syne, sans-serif' }}>
+          Profil introuvable
+        </h2>
+      </PageContainer>
     );
   }
 
   return (
-    <ProfileContainer role="main" aria-label="Profil utilisateur">
-      {error && <ErrorMessage role="alert">{error}</ErrorMessage>}
-      <ProfileHeader>
-        <ProfilePicture
-          src={user.img || `https://via.placeholder.com/80/8A2BE2/ffffff?text=${encodeURIComponent(user.name?.charAt(0).toUpperCase() || 'U')}`}
-          alt={`Photo de profil de ${user.name || 'Utilisateur'}`}
-          onError={e => {
-            e.target.src = `https://via.placeholder.com/80/8A2BE2/ffffff?text=${encodeURIComponent(user.name?.charAt(0).toUpperCase() || 'U')}`;
-          }}
-        />
-        <ProfileInfo>
-          <Username>{user.name || 'Utilisateur'}</Username>
-          <Email>{user.email}</Email>
-          <Description>{user.description || 'Aucune description disponible.'}</Description>
-          <Stats>
-            <Stat>
-              Abonnés: <span>{user.subscribers || 0}</span>
-            </Stat>
-            <Stat>
-              Abonnements: <span>{user.subscribedUsers?.length || 0}</span>
-            </Stat>
-          </Stats>
-        </ProfileInfo>
-      </ProfileHeader>
+    <PageContainer $isDark={isDark}>
+      {errorMsg && <ErrorBox $isDark={isDark}>{errorMsg}</ErrorBox>}
 
-      <ActionButtons>
-        {isOwnProfile ? (
-          !isEditing && (
-            <EditButton onClick={handleEditToggle} aria-label="Modifier le profil">
-              Edit profil
-            </EditButton>
-          )
-        ) : (
-          <SubscribeButton
-            isSubscribed={isSubscribed}
-            onClick={handleSubscribeToggle}
-            aria-label={isSubscribed ? 'Se désabonner' : 'S\'abonner'}
-          >
-            {isSubscribed ? 'Se désabonner' : 'S\'abonner'}
-          </SubscribeButton>
-        )}
-      </ActionButtons>
+      {/* ─── Hero ────────────────────────────────────────────────────────────── */}
+      <HeroSection>
+        <CoverBand $isDark={isDark} />
+        <ProfileRow>
+          <AvatarWrap>
+            <Avatar
+              src={
+                user.img ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'U')}&background=6d28d9&color=fff&size=256`
+              }
+              alt={user.name}
+              $isDark={isDark}
+            />
+          </AvatarWrap>
 
+          <UserInfoBlock>
+            <TopRow>
+              <UserName $isDark={isDark}>{user.name || 'Utilisateur'}</UserName>
 
+              <ActionGroup>
+                {isOwnProfile ? (
+                  <EditBtn onClick={() => setEditing(!editing)} $isDark={isDark}>
+                    {editing ? '✕ Annuler' : '✎ Modifier'}
+                  </EditBtn>
+                ) : (
+                  <SubscribeBtn $subscribed={isSubscribed} onClick={toggleSubscribe} $isDark={isDark}>
+                    {isSubscribed ? "✓ Abonné" : "+ S'abonner"}
+                  </SubscribeBtn>
+                )}
+              </ActionGroup>
+            </TopRow>
 
-      {isEditing && (
-        <EditForm onSubmit={handleSubmit}>
-          <FormInput
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            placeholder="Nom d'utilisateur"
-            aria-label="Nom d'utilisateur"
-            maxLength={50}
-          />
-          <FormInput
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            placeholder="Adresse e-mail"
-            aria-label="Adresse e-mail"
-          />
-          <FormInput
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            placeholder="Nouveau mot de passe"
-            aria-label="Nouveau mot de passe"
-            minLength={6}
-          />
-          <FormInput
-            type="password"
-            name="passwordConfirm"
-            value={formData.passwordConfirm}
-            onChange={handleInputChange}
-            placeholder="Confirmer le mot de passe"
-            aria-label="Confirmer le mot de passe"
-            minLength={6}
-          />
-          <FormTextarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Description"
-            aria-label="Description du profil"
-            maxLength={1000}
-          />
-          <FormFileInput
-            type="file"
-            accept="image/jpeg,image/png,image/gif"
-            onChange={handleFileChange}
-            aria-label="Télécharger une photo de profil"
-          />
-          <FormButtons>
-            <CancelButton type="button" onClick={handleEditToggle} aria-label="Annuler les modifications">
-              Annuler
-            </CancelButton>
-            <EditButton type="submit" aria-label="Enregistrer les modifications">
-              Enregistrer
-            </EditButton>
-          </FormButtons>
-        </EditForm>
+            <UserEmail $isDark={isDark}>{user.email}</UserEmail>
+
+            <StatsRow>
+              <StatItem>
+                <StatNumber $isDark={isDark}>{(user.subscribers || 0).toLocaleString()}</StatNumber>
+                <StatLabel $isDark={isDark}>Abonnés</StatLabel>
+              </StatItem>
+              <Divider $isDark={isDark} />
+              <StatItem>
+                <StatNumber $isDark={isDark}>{(user.subscribedUsers?.length || 0).toLocaleString()}</StatNumber>
+                <StatLabel $isDark={isDark}>Abonnements</StatLabel>
+              </StatItem>
+              <Divider $isDark={isDark} />
+              <StatItem>
+                <StatNumber $isDark={isDark}>{videos.length}</StatNumber>
+                <StatLabel $isDark={isDark}>Vidéos</StatLabel>
+              </StatItem>
+            </StatsRow>
+          </UserInfoBlock>
+        </ProfileRow>
+      </HeroSection>
+
+      {/* ─── Description ─────────────────────────────────────────────────────── */}
+      {user.description && (
+        <DescriptionSection>
+          <DescriptionCard $isDark={isDark}>{user.description}</DescriptionCard>
+        </DescriptionSection>
       )}
-              <VideosTitle>Vidéos de {user.name || 'Utilisateur'}</VideosTitle>
-            <VideosSection>
+
+      {/* ─── Vidéos ──────────────────────────────────────────────────────────── */}
+      <ContentArea>
+        <SectionHeading $isDark={isDark}>Vidéos de {user.name}</SectionHeading>
+
         {videosLoading ? (
-          <LoadingMessage>Chargement des vidéos...</LoadingMessage>
-        ) : videosError ? (
-          <ErrorMessage>{videosError}</ErrorMessage>
+          <VideosGrid>
+            {Array(6).fill(null).map((_, i) => <SkeletonBase key={i} style={{ height: 220 }} />)}
+          </VideosGrid>
         ) : videos.length === 0 ? (
-          <NoVideosMessage>Aucune vidéo publiée.</NoVideosMessage>
+          <EmptyState $isDark={isDark}>Aucune vidéo publiée pour le moment…</EmptyState>
         ) : (
           <VideosGrid>
             {videos.map(video => (
-              <VideoCardWrapper key={video._id}>
+              <VideoCardWrap key={video._id}>
                 <Card video={video} />
-              </VideoCardWrapper>
+                {isOwnProfile && (
+                  <button onClick={() => deleteVideo(video._id)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(239,68,68,0.8)', color: 'white', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer' }}>
+                    ×
+                  </button>
+                )}
+              </VideoCardWrap>
             ))}
           </VideosGrid>
         )}
-      </VideosSection>
-    </ProfileContainer>
-    
+      </ContentArea>
+
+      {/* ─── Modal édition ───────────────────────────────────────────────────── */}
+      {editing && (
+        <Overlay onClick={e => e.target === e.currentTarget && setEditing(false)}>
+          <Modal $isDark={isDark}>
+            <ModalTitle $isDark={isDark}>Modifier le profil</ModalTitle>
+
+            {errorMsg && (
+              <div style={{
+                background: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)',
+                color: '#fca5a5',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                marginBottom: 20,
+                fontSize: '0.9rem',
+                borderLeft: `3px solid #ef4444`,
+              }}>
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile}>
+              <FieldWrap>
+                <label>Nom</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                />
+              </FieldWrap>
+
+              <FieldWrap>
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                />
+              </FieldWrap>
+
+              <FieldWrap>
+                <label>Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm({ ...form, description: e.target.value })}
+                  rows={4}
+                  placeholder="Décrivez-vous en quelques mots…"
+                />
+              </FieldWrap>
+
+              <FieldWrap>
+                <label>Photo de profil</label>
+                <input type="file" accept="image/*" onChange={handleImageChange} />
+              </FieldWrap>
+
+              <FieldWrap>
+                <label>Nouveau mot de passe (optionnel)</label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="Laisser vide pour ne pas changer"
+                />
+              </FieldWrap>
+
+              <FieldWrap>
+                <label>Confirmer le mot de passe</label>
+                <input
+                  type="password"
+                  value={form.passwordConfirm}
+                  onChange={e => setForm({ ...form, passwordConfirm: e.target.value })}
+                  placeholder="Répéter le nouveau mot de passe"
+                />
+              </FieldWrap>
+
+              <ModalActions>
+                <CancelBtn type="button" onClick={() => setEditing(false)} $isDark={isDark}>
+                  Annuler
+                </CancelBtn>
+                <SaveBtn type="submit" $isDark={isDark}>
+                  Enregistrer
+                </SaveBtn>
+              </ModalActions>
+            </form>
+          </Modal>
+        </Overlay>
+      )}
+    </PageContainer>
   );
 }
 

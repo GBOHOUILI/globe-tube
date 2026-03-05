@@ -1,4 +1,4 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import GlobeTube from "../img/logo.png";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -17,10 +17,19 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import OutlinedFlagRoundedIcon from "@mui/icons-material/OutlinedFlagRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+
+// ── Import manquant corrigé pour le bouton SIGN IN ──
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/userSlice";
-const url = process.env.REACT_APP_API_URL
+
+// ── Import du ThemeContext (pour le thème dynamique) ──
+import { useTheme } from "../context/ThemeContext";
+
+const url = process.env.REACT_APP_API_URL;
+
 // Thème violet
 const theme = {
   primaryColor: "#8A2BE2",
@@ -32,7 +41,7 @@ const theme = {
   gradient: "linear-gradient(135deg, #8A2BE2, #4B0082)",
 };
 
-// Animations
+// Animations (inchangées)
 const float = keyframes`
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -61,31 +70,36 @@ const slideIn = keyframes`
   to { transform: translateX(0); }
 `;
 
+// ─── Styled Components avec couleurs dynamiques ─────────────────────────────
 const Container = styled.div`
   flex: 1;
-  background: linear-gradient(to bottom, #f8f4ff, #f1f1f1);
   height: 100%;
-  color: ${theme.textColor};
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#2E0854"};
   font-size: 16px;
   position: sticky;
   top: 0;
   padding: 10px;
-  border-right: 1px solid rgba(138, 43, 226, 0.2);
-  box-shadow: 5px 0 15px rgba(138, 43, 226, 0.1);
+  border-right: 1px solid ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.3)" : "rgba(138,43,226,0.2)"};
+  box-shadow: ${({ $isDark }) => 
+    $isDark 
+      ? "5px 0 15px rgba(0,0,0,0.6)" 
+      : "5px 0 15px rgba(138,43,226,0.1)"};
+  background: ${({ $isDark }) => $isDark ? "#0f1117" : "linear-gradient(to bottom, #f8f4ff, #f1f1f1)"};
   transition: all 0.3s ease;
-  
   &:hover {
-    box-shadow: 5px 0 20px rgba(138, 43, 226, 0.2);
+    box-shadow: ${({ $isDark }) => 
+      $isDark 
+        ? "5px 0 20px rgba(138,43,226,0.35)" 
+        : "5px 0 20px rgba(138,43,226,0.2)"};
   }
-
   @media (max-width: 768px) {
     position: fixed;
     top: 0;
     left: 0;
     width: 250px;
     z-index: 1000;
-    transform: ${props => (props.isOpen ? 'translateX(0)' : 'translateX(-100%)')};
-    animation: ${props => props.isOpen ? slideIn : ''} 0.3s ease-out;
+    transform: ${({ isOpen }) => (isOpen ? 'translateX(0)' : 'translateX(-100%)')};
+    animation: ${({ isOpen }) => isOpen ? slideIn : ''} 0.3s ease-out;
   }
 `;
 
@@ -95,24 +109,21 @@ const HamburgerButton = styled.button`
   top: 30px;
   left: 15px;
   z-index: 1001;
-  background: ${theme.gradient};
+  background: linear-gradient(135deg, #8A2BE2, #4B0082);
   border: none;
-  border-radius: 2;
-  padding: 2px;
+  border-radius: 50%;
+  padding: 8px;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(138, 43, 226, 0.3);
   transition: all 0.3s ease;
-
   svg {
     color: white;
     font-size: 28px;
   }
-
   &:hover {
     transform: scale(1.1);
     box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
   }
-
   @media (max-width: 768px) {
     display: block;
   }
@@ -131,10 +142,9 @@ const Logo = styled.div`
   margin-top: 10px;
   margin-bottom: 25px;
   animation: ${float} 3s ease-in-out infinite;
-  color: ${theme.primaryColor};
+  color: #8A2BE2;
   font-size: 24px;
   letter-spacing: 0.5px;
-  
   &:hover {
     animation: ${glowEffect} 1.5s infinite;
   }
@@ -144,7 +154,6 @@ const Img = styled.img`
   height: 30px;
   filter: drop-shadow(0 0 5px rgba(138, 43, 226, 0.5));
   transition: all 0.3s ease;
-  
   &:hover {
     transform: rotate(15deg);
   }
@@ -161,13 +170,16 @@ const Item = styled.div`
   margin-bottom: 5px;
   position: relative;
   overflow: hidden;
-  
+  background-color: ${({ active, $isDark }) => 
+    active 
+      ? $isDark ? "rgba(138,43,226,0.25)" : "rgba(138,43,226,0.15)" 
+      : "transparent"};
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#2E0854"};
   svg {
-    color: ${theme.secondaryColor};
+    color: ${({ $isDark }) => $isDark ? "#c084fc" : "#9370DB"};
     transition: all 0.3s ease;
     font-size: 22px;
   }
-  
   &:before {
     content: '';
     position: absolute;
@@ -175,31 +187,29 @@ const Item = styled.div`
     bottom: 0;
     height: 2px;
     width: 0;
-    background: ${theme.gradient};
+    background: linear-gradient(135deg, #8A2BE2, #4B0082);
     transition: width 0.3s ease;
   }
-  
   &:hover {
-    background-color: rgba(138, 43, 226, 0.08);
+    background-color: ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.2)" : "rgba(138,43,226,0.08)"};
     transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(138, 43, 226, 0.15);
-    
+    box-shadow: ${({ $isDark }) => 
+      $isDark 
+        ? "0 4px 12px rgba(138,43,226,0.3)" 
+        : "0 4px 12px rgba(138,43,226,0.15)"};
     svg {
-      color: ${theme.primaryColor};
+      color: #8A2BE2;
       transform: scale(1.2);
     }
-    
     &:before {
       width: 100%;
     }
   }
-  
   &.active {
-    background-color: rgba(138, 43, 226, 0.15);
+    background-color: ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.3)" : "rgba(138,43,226,0.15)"};
     font-weight: bold;
-    
     svg {
-      color: ${theme.primaryColor};
+      color: #8A2BE2;
     }
   }
 `;
@@ -208,28 +218,28 @@ const Hr = styled.hr`
   margin: 20px 0px;
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, 
-    rgba(138, 43, 226, 0), 
-    rgba(138, 43, 226, 0.6), 
-    rgba(138, 43, 226, 0));
+  background: linear-gradient(90deg,
+    ${({ $isDark }) => $isDark ? "rgba(138,43,226,0)" : "rgba(138,43,226,0)"},
+    ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.6)" : "rgba(138,43,226,0.6)"},
+    ${({ $isDark }) => $isDark ? "rgba(138,43,226,0)" : "rgba(138,43,226,0)"});
 `;
 
 const Login = styled.div`
-  color: ${theme.textColor};
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#2E0854"};
   font-size: 14px;
   line-height: 1.4;
-  background-color: rgba(138, 43, 226, 0.05);
+  background-color: ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.1)" : "rgba(138,43,226,0.05)"};
   padding: 15px;
   border-radius: 12px;
-  box-shadow: inset 0 0 10px rgba(138, 43, 226, 0.1);
+  box-shadow: inset 0 0 10px ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.2)" : "rgba(138,43,226,0.1)"};
   animation: ${fadeIn} 1s ease-out;
 `;
 
 const Button = styled.button`
   padding: 10px 22px;
-  background: ${props => props.transparent ? "transparent" : theme.gradient};
-  border: ${props => props.transparent ? `2px solid ${theme.primaryColor}` : "none"};
-  color: ${props => props.transparent ? theme.primaryColor : "white"};
+  background: ${({ transparent }) => transparent ? "transparent" : "linear-gradient(135deg, #8A2BE2, #4B0082)"};
+  border: ${({ transparent }) => transparent ? `2px solid #8A2BE2` : "none"};
+  color: ${({ transparent }) => transparent ? "#8A2BE2" : "white"};
   border-radius: 25px;
   font-weight: 600;
   font-size: 14px;
@@ -239,26 +249,25 @@ const Button = styled.button`
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  animation: ${pulse} 2s infinite;
-  box-shadow: ${props => props.transparent ? 
-    `0 3px 10px rgba(138, 43, 226, 0.1)` : 
-    `0 5px 15px rgba(138, 43, 226, 0.3)`};
-  
+  box-shadow: ${({ transparent }) => 
+    transparent 
+      ? `0 3px 10px rgba(138,43,226,0.1)` 
+      : `0 5px 15px rgba(138,43,226,0.3)`};
   &:hover {
     transform: translateY(-3px);
-    box-shadow: ${props => props.transparent ? 
-      `0 8px 20px rgba(138, 43, 226, 0.2)` : 
-      `0 10px 25px rgba(138, 43, 226, 0.4)`};
-    background: ${props => props.transparent ? 
-      `${theme.primaryColor}15` : 
-      `linear-gradient(135deg, ${theme.accentColor}, ${theme.darkColor})`};
+    box-shadow: ${({ transparent }) => 
+      transparent 
+        ? `0 5px 15px rgba(138,43,226,0.2)` 
+        : `0 10px 25px rgba(138,43,226,0.4)`};
+    background: ${({ transparent }) => 
+      transparent 
+        ? `rgba(138,43,226,0.15)` 
+        : `linear-gradient(135deg, #4B0082, #8A2BE2)`};
     letter-spacing: 0.5px;
   }
-  
   &:active {
     transform: translateY(1px);
   }
-  
   svg {
     font-size: 18px;
   }
@@ -267,12 +276,11 @@ const Button = styled.button`
 const Title = styled.h2`
   font-size: 13px;
   font-weight: 500;
-  color: ${theme.secondaryColor};
+  color: #9370DB;
   margin-bottom: 15px;
   position: relative;
   padding-bottom: 5px;
   display: inline-block;
-  
   &:after {
     content: '';
     position: absolute;
@@ -280,7 +288,7 @@ const Title = styled.h2`
     bottom: 0;
     width: 100%;
     height: 2px;
-    background: ${theme.gradient};
+    background: linear-gradient(135deg, #8A2BE2, #4B0082);
     border-radius: 2px;
   }
 `;
@@ -289,24 +297,29 @@ const CategorySection = styled.div`
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
+// ─── Composant Menu (sidebar) ──────────────────────────────────────────────
 const Menu = () => {
   const [activeItem, setActiveItem] = useState("Home");
   const [isOpen, setIsOpen] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
+  // Récupération du thème global
+  const { isDark } = useTheme();
+
+  const currentUser = useSelector((state) => state.user.currentUser);
+
   const handleItemClick = (itemName) => {
     setActiveItem(itemName);
-    setIsOpen(false); // Close sidebar on item click (mobile)
+    setIsOpen(false);
   };
-
-  const { currentUser } = useSelector((state) => state.user);
 
   const handleLogout = async (e) => {
     e.preventDefault();
     navigate('/signin');
     dispatch(logout());
-    setIsOpen(false); // Close sidebar on logout
+    setIsOpen(false);
   };
 
   const toggleMenu = () => {
@@ -318,7 +331,8 @@ const Menu = () => {
       <HamburgerButton onClick={toggleMenu}>
         <MenuRoundedIcon />
       </HamburgerButton>
-      <Container isOpen={isOpen}>
+
+      <Container $isDark={isDark} isOpen={isOpen}>
         <Wrapper>
           <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
             <Logo>
@@ -326,148 +340,180 @@ const Menu = () => {
               GlobeTube
             </Logo>
           </Link>
-          
+
           <CategorySection>
-            <Link to="/" style={{textDecoration:"none", color:"inherit"}}>
-              <Item 
-                className={activeItem === "Home" ? "active" : ""} 
-                onClick={() => handleItemClick("Home")}>
+            <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
+              <Item
+                className={activeItem === "Home" ? "active" : ""}
+                onClick={() => handleItemClick("Home")}
+                $isDark={isDark}
+              >
                 <HomeRoundedIcon />
                 Home
               </Item>
             </Link>
 
-            <Link to="/trends" style={{textDecoration:"none", color:"inherit"}}>
-              <Item 
-                className={activeItem === "Explore" ? "active" : ""} 
-                onClick={() => handleItemClick("Explore")}>
+            <Link to="/trends" style={{ textDecoration: "none", color: "inherit" }}>
+              <Item
+                className={activeItem === "Explore" ? "active" : ""}
+                onClick={() => handleItemClick("Explore")}
+                $isDark={isDark}
+              >
                 <ExploreRoundedIcon />
                 Explore
               </Item>
             </Link>
-            
-            <Link to="/subscriptions" style={{textDecoration:"none", color:"inherit"}}>
-              <Item 
-                className={activeItem === "Subscriptions" ? "active" : ""} 
-                onClick={() => handleItemClick("Subscriptions")}>
+
+            <Link to="/subscriptions" style={{ textDecoration: "none", color: "inherit" }}>
+              <Item
+                className={activeItem === "Subscriptions" ? "active" : ""}
+                onClick={() => handleItemClick("Subscriptions")}
+                $isDark={isDark}
+              >
                 <SubscriptionsRoundedIcon />
                 Subscriptions
               </Item>
             </Link>
           </CategorySection>
-          
-          <Hr />
-          
+
+          <Hr $isDark={isDark} />
+
           <CategorySection>
-            <Item 
-              className={activeItem === "Library" ? "active" : ""} 
+            <Item
+              className={activeItem === "Library" ? "active" : ""}
               onClick={() => handleItemClick("Library")}
+              $isDark={isDark}
             >
               <VideoLibraryRoundedIcon />
               Library
             </Item>
-            <Item 
-              className={activeItem === "History" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "History" ? "active" : ""}
               onClick={() => handleItemClick("History")}
+              $isDark={isDark}
             >
               <HistoryRoundedIcon />
               History
             </Item>
           </CategorySection>
-          
-          <Hr />
-          
-          {currentUser && 
+
+          <Hr $isDark={isDark} />
+
+          {currentUser && (
             <>
-              <Button onClick={handleLogout}>
+              <Item
+                onClick={handleLogout}
+                $isDark={isDark}
+                style={{ cursor: "pointer" }}
+              >
                 <PersonRoundedIcon />
-                LOG OUT
-              </Button>
-              <Hr />
-            </>        
-          }
-          
-          {!currentUser && 
+                Log out
+              </Item>
+              <Hr $isDark={isDark} />
+            </>
+          )}
+
+          {!currentUser && (
             <>
-              <Login>
+              <Login $isDark={isDark}>
                 Sign in to like videos, comment, and subscribe.
-                <Link to="/signin" style={{textDecoration:"none"}}>
-                  <Button>
-                    <PersonRoundedIcon />
+                <Link to="/signin" style={{ textDecoration: "none" }}>
+                  <Button transparent>
+                    <AccountCircleOutlinedIcon />
                     SIGN IN
                   </Button>
                 </Link>
               </Login>
-              <Hr />
-            </>        
-          }
-          
+              <Hr $isDark={isDark} />
+            </>
+          )}
+
           <Title>Tendances</Title>
+
           <CategorySection>
-            <Item 
-              className={activeItem === "Music" ? "active" : ""} 
+            <Item
+              className={activeItem === "Music" ? "active" : ""}
               onClick={() => handleItemClick("Music")}
+              $isDark={isDark}
             >
               <MusicNoteRoundedIcon />
               Music
             </Item>
-            <Item 
-              className={activeItem === "Sports" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "Sports" ? "active" : ""}
               onClick={() => handleItemClick("Sports")}
+              $isDark={isDark}
             >
               <SportsSoccerRoundedIcon />
               Sports
             </Item>
-            <Item 
-              className={activeItem === "Gaming" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "Gaming" ? "active" : ""}
               onClick={() => handleItemClick("Gaming")}
+              $isDark={isDark}
             >
               <SportsEsportsRoundedIcon />
               Gaming
             </Item>
-            <Item 
-              className={activeItem === "Movies" ? "active" : ""} 
-              onClick={() => handleItemClick("Movies")}
-            >
-              <TheatersRoundedIcon />
-              Movies
-            </Item>
-            <Item 
-              className={activeItem === "News" ? "active" : ""} 
+
+            <Link to="/movies" style={{ textDecoration: "none", color: "inherit" }}>
+              <Item
+                className={activeItem === "Movies" ? "active" : ""}
+                onClick={() => handleItemClick("Movies")}
+                $isDark={isDark}
+              >
+                <TheatersRoundedIcon />
+                Movies
+              </Item>
+            </Link>
+
+            <Item
+              className={activeItem === "News" ? "active" : ""}
               onClick={() => handleItemClick("News")}
+              $isDark={isDark}
             >
               <FeedRoundedIcon />
               News
             </Item>
-            <Item 
-              className={activeItem === "Live" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "Live" ? "active" : ""}
               onClick={() => handleItemClick("Live")}
+              $isDark={isDark}
             >
               <StreamRoundedIcon />
               Live
             </Item>
           </CategorySection>
-          
-          <Hr />
-          
+
+          <Hr $isDark={isDark} />
+
           <CategorySection>
-            <Item 
-              className={activeItem === "Settings" ? "active" : ""} 
+            <Item
+              className={activeItem === "Settings" ? "active" : ""}
               onClick={() => handleItemClick("Settings")}
+              $isDark={isDark}
             >
               <SettingsRoundedIcon />
               Settings
             </Item>
-            <Item 
-              className={activeItem === "Report" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "Report" ? "active" : ""}
               onClick={() => handleItemClick("Report")}
+              $isDark={isDark}
             >
               <OutlinedFlagRoundedIcon />
               Report
             </Item>
-            <Item 
-              className={activeItem === "Help" ? "active" : ""} 
+
+            <Item
+              className={activeItem === "Help" ? "active" : ""}
               onClick={() => handleItemClick("Help")}
+              $isDark={isDark}
             >
               <HelpRoundedIcon />
               Help

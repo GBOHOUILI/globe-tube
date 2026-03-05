@@ -3,16 +3,9 @@ import styled from 'styled-components';
 import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
+import { useTheme } from "../context/ThemeContext";
+
 const url = process.env.REACT_APP_API_URL;
-const theme = {
-  primaryColor: '#8A2BE2',
-  secondaryColor: '#9370DB',
-  accentColor: '#BA55D3',
-  lightColor: '#E6E6FA',
-  darkColor: '#4B0082',
-  textColor: '#2E0854',
-  errorColor: '#d32f2f',
-};
 
 // Singleton socket instance
 let socketInstance = null;
@@ -50,7 +43,7 @@ const isValidDate = (dateString) => {
   return !isNaN(date.getTime());
 };
 
-// Styled components
+// Styled components avec couleurs dynamiques
 const ChatContainer = styled.div`
   position: relative;
   display: flex;
@@ -60,52 +53,28 @@ const ChatContainer = styled.div`
   width: 100%;
   margin: 0 auto;
   border-radius: 20px;
-  background: linear-gradient(135deg, ${theme.lightColor} 0%, #ffffff 100%);
+  background: ${({ $isDark }) => $isDark ? '#0f1117' : 'linear-gradient(135deg, #E6E6FA 0%, #ffffff 100%)'};
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.1);
-
+  box-shadow: ${({ $isDark }) => $isDark ? '0 10px 30px rgba(0,0,0,0.6)' : '0 10px 30px rgba(0,0,0,0.1)'};
+  border: 1px solid ${({ $isDark }) => $isDark ? 'rgba(138,43,226,0.3)' : 'rgba(138,43,226,0.1)'};
   @media (max-width: 768px) {
     height: 100vh;
     max-height: 100vh;
     border-radius: 0;
     margin: 0;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
 `;
 
 const Header = styled.header`
   padding: 16px 20px;
-  background: linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.darkColor} 100%);
+  background: linear-gradient(135deg, #8A2BE2 0%, #4B0082 100%);
   color: white;
   font-size: 1.2rem;
   font-weight: 600;
   text-align: center;
-  border-bottom: 1px solid ${theme.darkColor};
+  border-bottom: 1px solid #4B0082;
   border-radius: 20px 20px 0 0;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  }
-
-  @media (max-width: 768px) {
-    border-radius: 0;
-    padding: 12px 16px;
-  }
 `;
 
 const MessagesContainer = styled.div`
@@ -113,29 +82,13 @@ const MessagesContainer = styled.div`
   overflow-y: auto;
   padding: 16px;
   scroll-behavior: smooth;
-  background: linear-gradient(to bottom, rgba(230, 230, 250, 0.1), rgba(255, 255, 255, 0.05));
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: ${theme.lightColor}40;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, ${theme.secondaryColor}, ${theme.accentColor});
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: ${theme.primaryColor};
-  }
-
+  background: ${({ $isDark }) => $isDark ? 'linear-gradient(to bottom, rgba(30,37,53,0.6), rgba(15,17,23,0.4))' : 'linear-gradient(to bottom, rgba(230,230,250,0.1), rgba(255,255,255,0.05))'};
+  &::-webkit-scrollbar { width: 8px; }
+  &::-webkit-scrollbar-track { background: ${({ $isDark }) => $isDark ? '#1e2535' : '#E6E6FA40'}; border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #9370DB, #BA55D3); border-radius: 4px; border: 1px solid ${({ $isDark }) => $isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}; }
+  &::-webkit-scrollbar-thumb:hover { background: #8A2BE2; }
   scrollbar-width: thin;
-  scrollbar-color: ${theme.secondaryColor} ${theme.lightColor}40;
+  scrollbar-color: #9370DB ${({ $isDark }) => $isDark ? '#1e2535' : '#E6E6FA40'};
 `;
 
 const MessageRow = styled.div`
@@ -144,56 +97,41 @@ const MessageRow = styled.div`
   align-items: flex-end;
   margin-bottom: 16px;
   transition: opacity 0.3s ease;
-
-  &:hover {
-    .message-timestamp {
-      opacity: 1;
-    }
-  }
+  &:hover { .message-timestamp { opacity: 1; } }
 `;
 
 const MessageGroup = styled.div`
   display: flex;
   flex-direction: column;
   max-width: 75%;
-
-  @media (max-width: 768px) {
-    max-width: 85%;
-  }
+  @media (max-width: 768px) { max-width: 85%; }
 `;
 
 const SenderName = styled.div`
   font-size: 0.8rem;
   font-weight: 500;
-  color: ${theme.textColor}80;
+  color: ${({ $isDark }) => $isDark ? 'rgba(148,163,184,0.8)' : 'rgba(46,8,84,0.8)'};
   margin-bottom: 4px;
   margin-${props => props.isCurrentUser ? 'right' : 'left'}: 12px;
   opacity: 0.8;
 `;
 
 const MessageBubble = styled.div`
-  background: ${props => props.isCurrentUser 
-    ? `linear-gradient(135deg, ${theme.primaryColor}, ${theme.secondaryColor})`
-    : '#ffffff'
-  };
-  color: ${props => props.isCurrentUser ? '#ffffff' : theme.textColor};
-  padding: 12px 3px 1px 16px;
-  border-radius: ${props => props.isCurrentUser 
-    ? '20px 20px 4px 20px' 
-    : '20px 20px 20px 4px'
-  };
+  background: ${props => props.isCurrentUser
+    ? 'linear-gradient(135deg, #8A2BE2, #9370DB)'
+    : ({ $isDark }) => $isDark ? '#1e2535' : '#ffffff'};
+  color: ${props => props.isCurrentUser ? '#ffffff' : ({ $isDark }) => $isDark ? '#e2e8f0' : '#2E0854'};
+  padding: 12px 16px;
+  border-radius: ${props => props.isCurrentUser ? '20px 20px 4px 20px' : '20px 20px 20px 4px'};
   word-break: break-word;
-  box-shadow: ${props => props.isCurrentUser 
+  box-shadow: ${props => props.isCurrentUser
     ? '0 4px 12px rgba(138, 43, 226, 0.3)'
-    : '0 2px 8px rgba(0, 0, 0, 0.1)'
-  };
-  border: ${props => props.isCurrentUser 
+    : ({ $isDark }) => $isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 8px rgba(0,0,0,0.1)'};
+  border: ${props => props.isCurrentUser
     ? 'none'
-    : `1px solid ${theme.lightColor}60`
-  };
+    : ({ $isDark }) => $isDark ? '1px solid rgba(148,163,184,0.2)' : '1px solid rgba(230,230,250,0.6)'};
   position: relative;
   line-height: 1.4;
-
   &::before {
     content: '';
     position: absolute;
@@ -202,28 +140,22 @@ const MessageBubble = styled.div`
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-top-color: ${props => props.isCurrentUser ? theme.secondaryColor : '#ffffff'};
+    border-top-color: ${props => props.isCurrentUser ? '#9370DB' : ({ $isDark }) => $isDark ? '#1e2535' : '#ffffff'};
     border-${props => props.isCurrentUser ? 'right' : 'left'}: none;
     transform: rotate(${props => props.isCurrentUser ? '45deg' : '-45deg'});
   }
 `;
 
-const MessageContent = styled.div`
-  margin-bottom: 4px;
-  margin-right: 16px;
-`;
+const MessageContent = styled.div`margin-bottom: 4px; margin-right: 16px;`;
 
 const Timestamp = styled.div`
   font-size: 0.7rem;
-  color: ${props => props.isCurrentUser ? 'rgba(73, 1, 1, 0.9)' : 'rgba(38, 0, 77, 0.5)'};
+  color: ${({ $isDark }) => $isDark ? 'rgba(148,163,184,0.9)' : 'rgba(46,8,84,0.5)'};
   text-align: ${props => props.isCurrentUser ? 'right' : 'left'};
   margin-top: 4px;
   opacity: 0.8;
   transition: opacity 0.3s ease;
-
-  &.message-timestamp {
-    opacity: 0.8;
-  }
+  &.message-timestamp { opacity: 0.8; }
 `;
 
 const Avatar = styled.img`
@@ -232,49 +164,44 @@ const Avatar = styled.img`
   border-radius: 50%;
   margin: ${props => props.isCurrentUser ? '0 8px 0 0' : '0 0 0 8px'};
   object-fit: cover;
-  border: 2px solid ${props => props.isCurrentUser ? theme.primaryColor : theme.lightColor};
-  background: ${theme.lightColor};
+  border: 2px solid ${({ $isDark }) => $isDark ? '#c084fc' : '#E6E6FA'};
+  background: ${({ $isDark }) => $isDark ? '#1e2535' : '#E6E6FA'};
   flex-shrink: 0;
 `;
 
 const InputContainer = styled.div`
   display: flex;
   padding: 16px;
-  background: #ffffff;
-  border-top: 1px solid ${theme.lightColor}60;
+  background: ${({ $isDark }) => $isDark ? '#161b22' : '#ffffff'};
+  border-top: 1px solid ${({ $isDark }) => $isDark ? 'rgba(148,163,184,0.2)' : 'rgba(230,230,250,0.6)'};
   border-radius: 0 0 20px 20px;
   gap: 12px;
-
-  @media (max-width: 768px) {
-    border-radius: 0;
-    padding: 12px;
-  }
+  @media (max-width: 768px) { border-radius: 0; padding: 12px; }
 `;
 
 const ChatInput = styled.input`
   flex: 1;
   padding: 12px 16px;
   border-radius: 24px;
-  border: 2px solid ${theme.lightColor}60;
-  background: #fff;
+  border: 2px solid ${({ $isDark }) => $isDark ? 'rgba(148,163,184,0.3)' : 'rgba(230,230,250,0.6)'};
+  background: ${({ $isDark }) => $isDark ? '#1e2535' : '#fff'};
   font-size: 0.95rem;
   font-family: inherit;
+  color: ${({ $isDark }) => $isDark ? '#e2e8f0' : '#2E0854'};
   transition: all 0.3s ease;
-
   &:focus {
     outline: none;
-    border-color: ${theme.accentColor};
-    box-shadow: 0 0 0 3px ${theme.accentColor}20;
+    border-color: #BA55D3;
+    box-shadow: 0 0 0 3px ${({ $isDark }) => $isDark ? 'rgba(186,85,211,0.3)' : 'rgba(186,85,211,0.2)'};
     transform: translateY(-1px);
   }
-
   &::placeholder {
-    color: ${theme.textColor}50;
+    color: ${({ $isDark }) => $isDark ? 'rgba(148,163,184,0.6)' : 'rgba(46,8,84,0.5)'};
   }
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.accentColor});
+  background: linear-gradient(135deg, #8A2BE2, #BA55D3);
   color: white;
   padding: 12px 20px;
   border: none;
@@ -287,23 +214,13 @@ const SendButton = styled.button`
   min-width: 80px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
-
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, ${theme.darkColor}, ${theme.primaryColor});
+    background: linear-gradient(135deg, #4B0082, #8A2BE2);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(138, 43, 226, 0.4);
   }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: 0 2px 6px rgba(138, 43, 226, 0.2);
-  }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: 0 2px 6px rgba(138, 43, 226, 0.2); }
 `;
 
 const LoadingSpinner = styled.div`
@@ -313,10 +230,7 @@ const LoadingSpinner = styled.div`
   border-radius: 50%;
   border-top-color: #fff;
   animation: spin 1s linear infinite;
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 `;
 
 const TypingIndicator = styled.div`
@@ -324,33 +238,24 @@ const TypingIndicator = styled.div`
   align-items: center;
   padding: 12px 16px;
   margin-bottom: 8px;
-
+  color: ${({ $isDark }) => $isDark ? '#94a3b8' : '#64748b'};
   .typing-dots {
     display: flex;
     gap: 4px;
     margin-left: 8px;
-
     span {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: ${theme.secondaryColor};
+      background: #BA55D3;
       animation: typing 1.4s infinite ease-in-out;
-
       &:nth-child(1) { animation-delay: -0.32s; }
       &:nth-child(2) { animation-delay: -0.16s; }
     }
   }
-
   @keyframes typing {
-    0%, 80%, 100% {
-      transform: scale(0.8);
-      opacity: 0.5;
-    }
-    40% {
-      transform: scale(1);
-      opacity: 1;
-    }
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
   }
 `;
 
@@ -359,6 +264,8 @@ function ChatBox({ roomId }) {
   const [messages, setMessages] = useState([]);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+
+  const { isDark } = useTheme();
 
   const currentUser = useSelector((state) => state.user.currentUser) || {
     _id: 'user1',
@@ -370,20 +277,16 @@ function ChatBox({ roomId }) {
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+
   const socket = useMemo(() => getSocket(), []);
 
-  // Typing debounce
   const emitTyping = useMemo(
-    () => debounce(() => {
-      socket.emit('typing', { roomId, userId: currentUser._id });
-    }, 300),
+    () => debounce(() => socket.emit('typing', { roomId, userId: currentUser._id }), 300),
     [roomId, currentUser._id, socket]
   );
 
   const emitStopTyping = useMemo(
-    () => debounce(() => {
-      socket.emit('stop-typing', { roomId, userId: currentUser._id });
-    }, 1000),
+    () => debounce(() => socket.emit('stop-typing', { roomId, userId: currentUser._id }), 1000),
     [roomId, currentUser._id, socket]
   );
 
@@ -391,22 +294,14 @@ function ChatBox({ roomId }) {
     if (messagesEndRef.current) {
       const container = messagesContainerRef.current;
       const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
-
       if (force || isScrolledToBottom) {
-        messagesEndRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-          inline: 'nearest',
-        });
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
       }
     }
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+  useEffect(() => { scrollToBottom(); }, [messages, isTyping, scrollToBottom]);
 
-  // Socket connection management
   useEffect(() => {
     socket.emit('join-room', roomId);
     socket.emit('load-messages', { roomId });
@@ -417,34 +312,28 @@ function ChatBox({ roomId }) {
     };
   }, [socket, roomId, emitStopTyping]);
 
-  // Message handling
   useEffect(() => {
     const handleMessagesLoaded = (loadedMessages) => {
-      setMessages(
-        loadedMessages.map((msg) => ({
-          ...msg,
-          timestamp: isValidDate(msg.timestamp) ? new Date(msg.timestamp) : new Date(),
-        }))
-      );
+      setMessages(loadedMessages.map(msg => ({
+        ...msg,
+        timestamp: isValidDate(msg.timestamp) ? new Date(msg.timestamp) : new Date(),
+      })));
     };
 
     const handleReceiveMessage = (message) => {
-      setMessages((prev) => {
+      setMessages(prev => {
         const existingIndex = prev.findIndex(
-          (msg) => (msg.tempId && msg.tempId === message.tempId) || (msg.id && msg.id === message.id)
+          msg => (msg.tempId && msg.tempId === message.tempId) || (msg.id && msg.id === message.id)
         );
-
         const newMessage = {
           ...message,
           timestamp: isValidDate(message.timestamp) ? new Date(message.timestamp) : new Date(),
         };
-
         if (existingIndex !== -1) {
           const updated = [...prev];
           updated[existingIndex] = newMessage;
           return updated;
         }
-
         return [...prev, newMessage];
       });
       setIsTyping(false);
@@ -459,9 +348,7 @@ function ChatBox({ roomId }) {
     };
 
     const handleStopTyping = ({ userId }) => {
-      if (userId !== currentUser._id) {
-        setIsTyping(false);
-      }
+      if (userId !== currentUser._id) setIsTyping(false);
     };
 
     socket.on('messages-loaded', handleMessagesLoaded);
@@ -480,30 +367,23 @@ function ChatBox({ roomId }) {
     };
   }, [socket, currentUser._id, emitTyping, emitStopTyping]);
 
-  const handleInputChange = useCallback(
-    (e) => {
-      const value = e.target.value;
-      setInput(value);
-
-      if (value.trim()) {
-        emitTyping();
-        clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-          emitStopTyping();
-        }, 2000);
-      } else {
-        emitStopTyping();
-      }
-    },
-    [emitTyping, emitStopTyping]
-  );
+  const handleInputChange = useCallback((e) => {
+    const value = e.target.value;
+    setInput(value);
+    if (value.trim()) {
+      emitTyping();
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => emitStopTyping(), 2000);
+    } else {
+      emitStopTyping();
+    }
+  }, [emitTyping, emitStopTyping]);
 
   const handleSend = useCallback(async () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isSending) return;
 
     setIsSending(true);
-
     const tempId = uuidv4();
     const newMessage = {
       sender: {
@@ -516,10 +396,9 @@ function ChatBox({ roomId }) {
       tempId,
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setInput('');
     emitStopTyping();
-
     setTimeout(() => inputRef.current?.focus(), 100);
 
     socket.emit('send-message', {
@@ -533,28 +412,20 @@ function ChatBox({ roomId }) {
     setIsSending(false);
   }, [input, isSending, currentUser, socket, roomId, emitStopTyping]);
 
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    },
-    [handleSend]
-  );
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }, [handleSend]);
 
   const formatTimestamp = useCallback((date) => {
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
-      return 'Date inconnue';
-    }
-
+    if (!(date instanceof Date) || isNaN(date.getTime())) return 'Date inconnue';
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-
     if (diffInMinutes < 1) return "À l'instant";
     if (diffInMinutes < 60) return `${diffInMinutes}min`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
-
     return new Intl.DateTimeFormat('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -564,45 +435,43 @@ function ChatBox({ roomId }) {
   }, []);
 
   return (
-    <ChatContainer role="main" aria-label="Interface de chat">
+    <ChatContainer $isDark={isDark} role="main" aria-label="Interface de chat">
       <Header>Chat Space</Header>
 
       <MessagesContainer
         ref={messagesContainerRef}
         aria-live="polite"
         aria-label="Messages du chat"
+        $isDark={isDark}
       >
         {messages.map((msg, index) => {
           const isCurrentUser = msg.sender.id === currentUser._id;
-
           return (
-            <MessageRow
-              key={msg.id || msg.tempId || index}
-              isCurrentUser={isCurrentUser}
-            >
+            <MessageRow key={msg.id || msg.tempId || index} isCurrentUser={isCurrentUser}>
               <Avatar
                 src={msg.sender.avatar}
                 alt={`Avatar de ${msg.sender.name}`}
                 isCurrentUser={isCurrentUser}
+                $isDark={isDark}
                 onError={(e) => {
-                  e.target.src =
-                    'https://via.placeholder.com/36/8A2BE2/ffffff?text=' +
+                  e.target.src = 'https://via.placeholder.com/36/8A2BE2/ffffff?text=' +
                     encodeURIComponent(msg.sender.name.charAt(0).toUpperCase());
                 }}
               />
 
               <MessageGroup>
                 {!isCurrentUser && (
-                  <SenderName isCurrentUser={isCurrentUser}>
+                  <SenderName isCurrentUser={isCurrentUser} $isDark={isDark}>
                     {msg.sender.name}
                   </SenderName>
                 )}
 
-                <MessageBubble isCurrentUser={isCurrentUser}>
+                <MessageBubble isCurrentUser={isCurrentUser} $isDark={isDark}>
                   <MessageContent>{msg.text}</MessageContent>
                   <Timestamp
                     isCurrentUser={isCurrentUser}
                     className="message-timestamp"
+                    $isDark={isDark}
                   >
                     {formatTimestamp(msg.timestamp)}
                   </Timestamp>
@@ -613,17 +482,16 @@ function ChatBox({ roomId }) {
         })}
 
         {isTyping && (
-          <TypingIndicator>
+          <TypingIndicator $isDark={isDark}>
             <Avatar
               src="https://via.placeholder.com/32/9370DB/ffffff?text=..."
               alt="Quelqu'un tape"
+              $isDark={isDark}
             />
             <div>
               Quelqu'un tape
               <div className="typing-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
               </div>
             </div>
           </TypingIndicator>
@@ -632,7 +500,7 @@ function ChatBox({ roomId }) {
         <div ref={messagesEndRef} />
       </MessagesContainer>
 
-      <InputContainer>
+      <InputContainer $isDark={isDark}>
         <ChatInput
           ref={inputRef}
           placeholder="Tapez votre message..."
@@ -644,6 +512,7 @@ function ChatBox({ roomId }) {
           maxLength={1000}
           autoComplete="off"
           spellCheck="true"
+          $isDark={isDark}
         />
         <SendButton
           onClick={handleSend}

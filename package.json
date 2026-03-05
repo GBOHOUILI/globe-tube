@@ -2,6 +2,7 @@
   "name": "video_app",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@cloudinary/react": "^1.14.3",
     "@cloudinary/url-gen": "^1.21.0",
@@ -20,6 +21,7 @@
     "lucide-react": "^0.511.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-icons": "^5.5.0",
     "react-player": "^2.16.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.30.0",

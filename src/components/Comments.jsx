@@ -4,7 +4,11 @@ import styled from "styled-components";
 import Comment from "./Comment";
 import axios from "axios";
 import SendIcon from "@mui/icons-material/Send";
-const url = process.env.REACT_APP_API_URL
+
+// ── Import du ThemeContext pour le thème global ──
+import { useTheme } from "../context/ThemeContext";
+
+const url = process.env.REACT_APP_API_URL;
 
 const Container = styled.div``;
 
@@ -25,17 +29,22 @@ const Avatar = styled.img`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  object-fit:cover;
+  object-fit: cover;
+  background: ${({ $isDark }) => $isDark ? "#1e2535" : "#e2e8f0"};
+  border: 2px solid ${({ $isDark }) => $isDark ? "#c084fc" : "#d1d5db"};
 `;
 
 const Input = styled.input`
   border: none;
-  border-bottom: 1px solid #ccc;
-  color: #333;
+  border-bottom: 1px solid ${({ $isDark }) => $isDark ? "#4b5563" : "#ccc"};
+  color: ${({ $isDark }) => $isDark ? "#e2e8f0" : "#333"};
   background-color: transparent;
   outline: none;
   padding: 5px;
   flex: 1;
+  &::placeholder {
+    color: ${({ $isDark }) => $isDark ? "#94a3b8" : "#aaa"};
+  }
 `;
 
 const Button = styled.button`
@@ -45,25 +54,30 @@ const Button = styled.button`
   padding: 8px 12px;
   cursor: pointer;
   align-self: flex-end;
-  box-shadow:none;
-
-  &:hover{
-    background-color: white;
-  color: #8A2BE2;
+  box-shadow: none;
+  transition: all 0.2s ease;
+  &:hover {
+    background-color: ${({ $isDark }) => $isDark ? "rgba(138,43,226,0.15)" : "white"};
+    color: #6b21a8;
+    transform: scale(1.1);
   }
 `;
 
+// ─── Composant Comments ────────────────────────────────────────────────────
 const Comments = ({ videoId }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [comments, setComments] = useState([]);
   const [desc, setDesc] = useState('');
 
+  // Récupération du thème global
+  const { isDark } = useTheme();
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const res = await axios.get(`${url}/comments/${videoId}`, {
-  withCredentials: true,
-});
+          withCredentials: true,
+        });
         setComments(res.data);
       } catch (err) {
         console.error("Erreur lors de la récupération des commentaires :", err);
@@ -77,12 +91,11 @@ const Comments = ({ videoId }) => {
     if (!desc.trim()) return;
 
     try {
-      const res = await axios.post(`${url}/comments`, {
-        videoId,
-        desc,
-      },{
-  withCredentials: true,
-}, );
+      const res = await axios.post(
+        `${url}/comments`,
+        { videoId, desc },
+        { withCredentials: true }
+      );
 
       // Ajout immédiat du commentaire dans la liste
       setComments([res.data, ...comments]);
@@ -96,17 +109,17 @@ const Comments = ({ videoId }) => {
     <Container>
       <NewComment onSubmit={handleAddComment}>
         <Row>
-          <Avatar src={currentUser?.img } />
+          <Avatar src={currentUser?.img} $isDark={isDark} />
           <Input
             placeholder="Add a comment..."
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
+            $isDark={isDark}
           />
-                  <Button type="submit">
-          <SendIcon/>
-        </Button>
+          <Button type="submit" $isDark={isDark}>
+            <SendIcon />
+          </Button>
         </Row>
-
       </NewComment>
 
       {comments.map((comment) => (
